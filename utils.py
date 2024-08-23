@@ -1,5 +1,3 @@
-import shutil
-import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional, Union
@@ -176,7 +174,9 @@ except ImportError:
 else:
     _old_send = pyodide_http._core.send
 
-    def _new_send(request: pyodide_http._core.Request, stream: bool = False) -> pyodide_http._core.Response:
+    def _new_send(
+        request: pyodide_http._core.Request, stream: bool = False
+    ) -> pyodide_http._core.Response:
         if js.URL.new(request.url).origin != js.location.origin:
             request.url = "https://proxy.climet.eu/" + request.url
         return _old_send(request, stream)
@@ -184,8 +184,6 @@ else:
     pyodide_http._core.send = _new_send
 
     def _new_urlopen(url, *args, **kwargs):
-        from io import BytesIO
-
         import urllib.request
         from http.client import HTTPResponse
 
@@ -209,15 +207,18 @@ else:
         # compressed format) the 'Content-Length' is the compressed length, while the
         # data itself is uncompressed. This will cause problems while decoding our
         # fake response.
-        headers_without_content_length = {
-            k: v for k, v in resp.headers.items() if k != "content-length"
-        } if "content-encoding" in resp.headers.keys() else resp.headers
+        headers_without_content_length = (
+            {k: v for k, v in resp.headers.items() if k != "content-length"}
+            if "content-encoding" in resp.headers.keys()
+            else resp.headers
+        )
         response_data = (
             b"HTTP/1.1 "
             + str(resp.status_code).encode("ascii")
             + b"\n"
             + "\n".join(
-                f"{'_'.join(k.title() for k in key.split('_'))}: {value}" for key, value in headers_without_content_length.items()
+                f"{'_'.join(k.title() for k in key.split('_'))}: {value}"
+                for key, value in headers_without_content_length.items()
             ).encode("ascii")
             + b"\n\n"
             + resp.body
@@ -228,7 +229,7 @@ else:
         return response
 
     def _new_urlopen_self_removed(self, url, *args, **kwargs):
-        return new_urlopen(url, *args, **kwargs)
+        return _new_urlopen(url, *args, **kwargs)
 
     urllib.request.urlopen = _new_urlopen
     urllib.request.OpenerDirector.open = _new_urlopen_self_removed
