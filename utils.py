@@ -14,6 +14,8 @@ from numcodecs.abc import Codec
 
 
 def open_dataset(path: Path, **kwargs) -> xr.Dataset:
+    path = Path(path)
+
     if path.suffix == ".grib" or kwargs.get("engine", None) == "cfgrib":
         if "engine" not in kwargs:
             kwargs["engine"] = "cfgrib"
@@ -157,79 +159,12 @@ def format_compress_stats(
                 / (stat.decode_timing.secs + stat.decode_timing.nanos * 1e-9),
                 2,
             ),
-            round(stat.encode_instructions / stat.decoded_bytes, 1),
-            round(stat.decode_instructions / stat.decoded_bytes, 1),
+            round(stat.encode_instructions / stat.decoded_bytes, 1)
+            if stat.encode_instructions is not None
+            else None,
+            round(stat.decode_instructions / stat.decoded_bytes, 1)
+            if stat.decode_instructions is not None
+            else None,
         ]
 
     return table
-
-
-# TODO: move this into the lab-specific patches
-try:
-    import js
-    import pyodide_http
-    import urllib
-except ImportError:
-    pass
-else:
-    _old_send = pyodide_http._core.send
-
-    def _new_send(
-        request: pyodide_http._core.Request, stream: bool = False
-    ) -> pyodide_http._core.Response:
-        if js.URL.new(request.url).origin != js.location.origin:
-            request.url = "https://proxy.climet.eu/" + request.url
-        return _old_send(request, stream)
-
-    pyodide_http._core.send = _new_send
-
-    def _new_urlopen(url, *args, **kwargs):
-        import urllib.request
-        from http.client import HTTPResponse
-
-        from pyodide_http._core import Request, send
-        from pyodide_http._urllib import FakeSock
-
-        method = "GET"
-        data = None
-        headers = {}
-        if isinstance(url, urllib.request.Request):
-            method = url.get_method()
-            data = url.data
-            headers = dict(url.header_items())
-            url = url.full_url
-
-        request = Request(method, url, headers=headers, body=data)
-        resp = send(request)
-
-        # Build a fake http response
-        # Strip out the content-length header. When Content-Encoding is 'gzip' (or other
-        # compressed format) the 'Content-Length' is the compressed length, while the
-        # data itself is uncompressed. This will cause problems while decoding our
-        # fake response.
-        headers_without_content_length = (
-            {k: v for k, v in resp.headers.items() if k != "content-length"}
-            if "content-encoding" in resp.headers.keys()
-            else resp.headers
-        )
-        response_data = (
-            b"HTTP/1.1 "
-            + str(resp.status_code).encode("ascii")
-            + b"\n"
-            + "\n".join(
-                f"{'_'.join(k.title() for k in key.split('_'))}: {value}"
-                for key, value in headers_without_content_length.items()
-            ).encode("ascii")
-            + b"\n\n"
-            + resp.body
-        )
-
-        response = HTTPResponse(FakeSock(response_data))
-        response.begin()
-        return response
-
-    def _new_urlopen_self_removed(self, url, *args, **kwargs):
-        return _new_urlopen(url, *args, **kwargs)
-
-    urllib.request.urlopen = _new_urlopen
-    urllib.request.OpenerDirector.open = _new_urlopen_self_removed
