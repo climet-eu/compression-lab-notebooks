@@ -14,6 +14,8 @@ from numcodecs.abc import Codec
 
 
 def open_dataset(path: Path, **kwargs) -> xr.Dataset:
+    path = Path(path)
+
     if path.suffix == ".grib" or kwargs.get("engine", None) == "cfgrib":
         if "engine" not in kwargs:
             kwargs["engine"] = "cfgrib"
@@ -157,8 +159,12 @@ def format_compress_stats(
                 / (stat.decode_timing.secs + stat.decode_timing.nanos * 1e-9),
                 2,
             ),
-            round(stat.encode_instructions / stat.decoded_bytes, 1),
-            round(stat.decode_instructions / stat.decoded_bytes, 1),
+            round(stat.encode_instructions / stat.decoded_bytes, 1)
+            if stat.encode_instructions is not None
+            else None,
+            round(stat.decode_instructions / stat.decoded_bytes, 1)
+            if stat.decode_instructions is not None
+            else None,
         ]
 
     return table
