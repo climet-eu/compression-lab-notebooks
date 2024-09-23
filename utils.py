@@ -1,3 +1,4 @@
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional, Union
@@ -6,8 +7,11 @@ from urllib.parse import urlparse
 
 import fcbench
 import ipyfilite
+import kerchunk
 import numcodecs
+import numpy as np
 import pandas as pd
+import sympy
 import xarray as xr
 import zarr
 from numcodecs.abc import Codec
@@ -168,3 +172,60 @@ def format_compress_stats(
         ]
 
     return table
+
+
+def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
+    kc_new = kc
+
+    # iterate over all variables
+    for k, v in kc["refs"].items():
+        if Path(k).name == ".zarray":
+            v = json.loads(v)
+
+            # we cannot chunk compressed arrays
+            if v["compressor"] is not None:
+                continue
+
+            chunks = v["chunks"]
+
+            # calculate the size of the chunk
+            nbytes_chunk = np.dtype(v["dtype"]).itemsize * int(
+                np.prod(chunks, dtype=np.uint64)
+            )
+
+            # skip to the next variable if the chunk is already small enough
+            if nbytes_chunk <= chunk_size:
+                continue
+
+            for i, c in enumerate(chunks):
+                # factorize the remaining chunk size
+                factors = []
+                for f, c in sympy.factorint(c).items():
+                    for _ in range(c):
+                        factors.append(f)
+                factors.sort()
+
+                if len(factors) == 0:
+                    continue
+
+                # find the smallest factor that would reduce the chunk size
+                #  below the limit, or the total factor
+                factor = 1
+                for f in factors:
+                    factor *= f
+                    if (nbytes_chunk // factor) <= chunk_size:
+                        break
+
+                # use kerchunk to apply the new chunking
+                kc_new = kerchunk.utils.subchunk(
+                    kc_new, Path(k).parts[0], factor,
+                )
+
+                chunks[i] = chunks[i] // factor
+                nbytes_chunk = nbytes_chunk // factor
+
+                # break if the chunk is now small enough
+                if nbytes_chunk <= chunk_size:
+                    break
+
+    return kc_new
