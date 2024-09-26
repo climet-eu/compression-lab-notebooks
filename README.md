@@ -23,6 +23,22 @@ To get started, click the blue `+` button in the top left to open a new launcher
 > Any changes you make to this notebook will be lost once the page is closed or refreshed. Please download any files you would like to keep.
 
 
+## Overview of the provided notebooks
+
+The **Online Laboratory for Data Compression** comes with several Jupyter notebook examples to
+
+1. introduce you to its functionality
+2. showcase different compression methods on various weather and climate datasets
+3. allow you to easily and quickly test out compression on *your* data
+
+The following is an overview of all notebooks:
+
+- [`intro.ipynb`](intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
+- [`cdsapi.ipynb`](cdsapi.ipynb), [`ecmwfapi.ipynb`](ecmwfapi.ipynb), and [`remote.ipynb`](remote.ipynb): Small examples on how to download small datasets with the `cdsapi` or `ecmwfapi` packages, or mount large remote datasets using `fsspec`.
+- [`comparison_q_t.ipynb`](comparison_q_t.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
+- [`quality.ipynb`](quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
+
+
 ## Getting Help and Contributing
 
 This laboratory is being developed at https://github.com/climet-eu/lab and https://github.com/climet-eu/compression-lab-notebooks. If you come across a bug or would like to suggest a new feature or support for an additional Python package, please submit an issue at https://github.com/climet-eu/lab/issues/ or https://github.com/climet-eu/compression-lab-notebooks/issues.
