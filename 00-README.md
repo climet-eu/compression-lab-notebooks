@@ -19,6 +19,13 @@ To get started, click the blue `+` button in the top left to open a new launcher
 > [!NOTE]
 > The online laboratory has only been tested in recent Firefox and Chrome browsers. Some features may not (yet) be supported in Safari browsers.
 
+> [!WARNING]
+> The online laboratory runs with the strict memory constraints of your web browser. It is therefore recommended to only open and execute one or two notebooks at a time. When a notebook is closed, the kernel will automatically shutdown to preserve resources.
+>
+> If the online lab runs out of memory, you can save your work, close the notebook, and try to restart it. If you are still running low on memory, you should first download a copy of your notebooks, then reload the notebook page, re-upload the notebook, and continue working on them.
+>
+> If you intend on executing memory intensive workloads, it is best to continue working on the notebooks locally instead. The online laboratory is primarily designed for initial exploration and for sharing codes in a reproducible environment.
+
 > [!CAUTION]
 > Any changes you make to this notebook will be lost once the page is closed or refreshed. Please download any files you would like to keep.
 
