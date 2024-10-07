@@ -34,7 +34,11 @@ The **Online Laboratory for Data Compression** comes with several Jupyter notebo
 The following is an overview of all notebooks:
 
 - [`intro.ipynb`](intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
-- [`cdsapi.ipynb`](cdsapi.ipynb), [`ecmwfapi.ipynb`](ecmwfapi.ipynb), and [`remote.ipynb`](remote.ipynb): Small examples on how to download small datasets with the `cdsapi` or `ecmwfapi` packages, or mount large remote datasets using `fsspec`.
+- [`02-data-sources/`](02-data-sources): Small examples on how to open datasets from different sources
+  - [`00-README.md`](02-data-sources/00-README.md)
+  - [`01-remote.ipynb`](02-data-sources/01-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
+  - [`02-cdsapi.ipynb`](02-data-sources/02-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
+  - [`03-ecmwfapi.ipynb`](02-data-sources/03-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
 - [`comparison_q_t.ipynb`](comparison_q_t.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
 - [`quality.ipynb`](quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
 
@@ -46,7 +50,7 @@ This laboratory is being developed at https://github.com/climet-eu/lab and https
 
 ## License
 
-Licensed under the CC BY 4.0 license ([LICENSE](LICENSE) or https://creativecommons.org/licenses/by/4.0/).
+Licensed under the CC BY 4.0 license ([LICENSE](LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
 
 
 ## Funding
