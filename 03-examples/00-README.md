@@ -2,9 +2,12 @@
 
 The **Online Laboratory for Data Compression** allows you to explore various data compression approaches. Compressors are made up of one or more codecs that transform and/or compress the data. The following notebooks provide several walkthroughs for different compression scenarios to introduce you to the available codecs and how they can be applied and evaluated.
 
+
 ## Overview of the provided notebooks
 
 - [`01-compressors.ipynb`](01-compressors.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
+- [`02-quality.ipynb`](02-quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
+
 
 ## License
 
