@@ -46,8 +46,8 @@ The following is an overview of all notebooks:
   - [`02-cdsapi.ipynb`](02-data-sources/02-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
   - [`03-ecmwfapi.ipynb`](02-data-sources/03-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
 - [`03-examples/`](03-examples/00-README.md): Longer walkthrough examples that apply and evaluate data compression on different variables
-  - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
-- [`quality.ipynb`](quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
+  - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): comparison of different compressors on a small temperature and specific humidity dataset
+  - [`02-quality.ipynb`](03-examples/02-quality.ipynb): quantitative evaluation of different compressors and their settings across different variables
 
 
 ## Getting Help and Contributing
