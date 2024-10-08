@@ -41,12 +41,12 @@ The **Online Laboratory for Data Compression** comes with several Jupyter notebo
 The following is an overview of all notebooks:
 
 - [`intro.ipynb`](intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
-- [`02-data-sources/`](02-data-sources): Small examples on how to open datasets from different sources
-  - [`00-README.md`](02-data-sources/00-README.md)
+- [`02-data-sources/`](02-data-sources/00-README.md): Small examples on how to open datasets from different sources
   - [`01-remote.ipynb`](02-data-sources/01-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
   - [`02-cdsapi.ipynb`](02-data-sources/02-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
   - [`03-ecmwfapi.ipynb`](02-data-sources/03-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
-- [`comparison_q_t.ipynb`](comparison_q_t.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
+- [`03-examples/`](03-examples/00-README.md): Longer walkthrough examples that apply and evaluate data compression on different variables
+  - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
 - [`quality.ipynb`](quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
 
 
