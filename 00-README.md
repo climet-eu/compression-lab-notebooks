@@ -42,6 +42,7 @@ The following is an overview of all notebooks:
 
 - [`intro.ipynb`](intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
 - [`02-data-sources/`](02-data-sources/00-README.md): Small examples on how to open datasets from different sources
+  - [`01-local.ipynb`](02-data-sources/01-local.ipynb): open a large local read-only dataset by mounting it into the online lab
   - [`02-remote.ipynb`](02-data-sources/02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
   - [`03-cdsapi.ipynb`](02-data-sources/03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
   - [`04-ecmwfapi.ipynb`](02-data-sources/04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
