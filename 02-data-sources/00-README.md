@@ -5,9 +5,9 @@ The **Online Laboratory for Data Compression** is built so you can explore vario
 
 ## Overview of the provided notebooks
 
-- [`01-remote.ipynb`](01-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
-- [`02-cdsapi.ipynb`](02-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
-- [`03-ecmwfapi.ipynb`](03-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
+- [`02-remote.ipynb`](02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
+- [`03-cdsapi.ipynb`](03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
+- [`04-ecmwfapi.ipynb`](04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
 
 
 ## License
