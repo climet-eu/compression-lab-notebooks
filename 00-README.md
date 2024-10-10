@@ -40,7 +40,7 @@ The **Online Laboratory for Data Compression** comes with several Jupyter notebo
 
 The following is an overview of all notebooks:
 
-- [`intro.ipynb`](intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
+- [`01-intro.ipynb`](01-intro.ipynb): First introduction to the online laboratory, data loading, compression, and visualisation
 - [`02-data-sources/`](02-data-sources/00-README.md): Small examples on how to open datasets from different sources
   - [`01-local.ipynb`](02-data-sources/01-local.ipynb): open a large local read-only dataset by mounting it into the online lab
   - [`02-remote.ipynb`](02-data-sources/02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
