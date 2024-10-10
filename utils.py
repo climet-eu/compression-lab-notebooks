@@ -5,16 +5,13 @@ from typing import Optional, Union
 from urllib.parse import unquote as urlunquote
 from urllib.parse import urlparse
 
-import fcbench
 import ipyfilite
 import kerchunk
-import numcodecs
 import numpy as np
 import pandas as pd
 import sympy
 import xarray as xr
 import zarr
-from numcodecs.abc import Codec
 
 
 def open_dataset(path: Path, **kwargs) -> xr.Dataset:
@@ -70,7 +67,11 @@ def _get_name_from_url(url: str) -> str:
 async def download_dataset_as_zarr(
     ds: xr.Dataset,
     name: str,
-    compressor: Union[Codec, list[Codec], dict[str, Union[Codec, list[Codec]]]],
+    compressor: Union[
+        "numcodecs.abc.Codec",
+        list["numcodecs.abc.Codec"],
+        dict[str, Union["numcodecs.abc.Codec", list["numcodecs.abc.Codec"]]],
+    ],
     zip_compression: int = 0,
 ):
     name_suffix = "".join(Path(name).suffixes)
@@ -134,8 +135,8 @@ async def file_download_path(name: str) -> Path:
 
 
 def format_compress_stats(
-    codecs: list[numcodecs.abc.Codec],
-    stats: list[fcbench.compressor.types.CodecPerformanceMeasurement],
+    codecs: list["numcodecs.abc.Codec"],
+    stats: list["fcbench.compressor.types.CodecPerformanceMeasurement"],
 ):
     table = pd.DataFrame(
         {
