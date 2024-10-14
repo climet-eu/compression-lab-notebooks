@@ -5,6 +5,7 @@ from typing import Optional, Union
 from urllib.parse import unquote as urlunquote
 from urllib.parse import urlparse
 
+import dask
 import ipyfilite
 import kerchunk
 import numpy as np
