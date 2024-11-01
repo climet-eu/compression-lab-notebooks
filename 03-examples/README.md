@@ -6,6 +6,7 @@ The **Online Laboratory for Data Compression** allows you to explore various dat
 ## Overview of the provided notebooks
 
 - [`01-compressors.ipynb`](01-compressors.ipynb): Comparison of different compressors on a small temperature and specific humidity dataset
+- [`02-quality.ipynb`](02-quality.ipynb): Quantitative evaluation of different compressors and their settings across different variables
 
 
 ## License
