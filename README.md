@@ -46,7 +46,7 @@ The following is an overview of all notebooks:
   - [`02-remote.ipynb`](02-data-sources/02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
   - [`03-cdsapi.ipynb`](02-data-sources/03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
   - [`04-ecmwfapi.ipynb`](02-data-sources/04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
-  - [`05-hplp-s3bucket.ipynb`](02-data-sources/05-hplp-s3bucket.ipynb): open hplp-experiment data from the ECMWF S3 bucket
+  - [`05-hplp-s3bucket.ipynb`](02-data-sources/05-hplp-s3bucket.ipynb): open large hplp-experiment datasets from the ECMWF S3 bucket
 - [`03-examples/`](03-examples/README.md): Longer walkthrough examples that apply and evaluate data compression on different variables
   - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): comparison of different compressors on a small temperature and specific humidity dataset
 
