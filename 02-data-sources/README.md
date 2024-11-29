@@ -9,7 +9,7 @@ The **Online Laboratory for Data Compression** is built so you can explore vario
 - [`02-remote.ipynb`](02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
 - [`03-cdsapi.ipynb`](03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
 - [`04-ecmwfapi.ipynb`](04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
-- [`05-hplp-s3bucket.ipynb`](05-hplp-s3bucket.ipynb): open large hplp-experiment datasets from the ECMWF S3 bucket
+
 
 
 ## License
