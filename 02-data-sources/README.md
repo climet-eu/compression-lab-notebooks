@@ -11,7 +11,6 @@ The **Online Laboratory for Data Compression** is built so you can explore vario
 - [`04-ecmwfapi.ipynb`](04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
 
 
-
 ## License
 
 Licensed under the CC BY 4.0 license ([LICENSE](../LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
