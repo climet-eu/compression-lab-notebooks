@@ -5,8 +5,10 @@ The **Online Laboratory for Data Compression** is built so you can explore vario
 
 ## Overview of the provided notebooks
 
-- [`01-hplp.ipynb`](01-hplp.ipynb): open hplp-experiment datasets from the ECMWF S3 bucket
-- [`02-OpenIFS.ipynb`](02-OpenIFS.ipynb): open OpenIFS-experiment datasets from the ECMWF S3 bucket
+- [`01-hplp.ipynb`](01-hplp.ipynb): open hplp-experiment dataset from the ECMWF S3 bucket
+- [`02-OpenIFS.ipynb`](02-OpenIFS.ipynb): open OpenIFS-experiment dataset from the ECMWF S3 bucket
+- [`03-NextGEMS.ipynb`](03-NextGEMS.ipynb): open NextGEMS-experiment dataset from the ECMWF S3 bucket
+- [`04-ICONXPP.ipynb`](04-ICONXPP.ipynb): open ICON-XPP-experiment dataset from the ECMWF S3 bucket
 
 
 ## License
