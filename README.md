@@ -49,9 +49,10 @@ The following is an overview of all notebooks:
 - [`03-examples/`](03-examples/README.md): Longer walkthrough examples that apply and evaluate data compression on different variables
   - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): comparison of different compressors on a small temperature and specific humidity dataset
 - [`04-example-datasets/`](04-example-datasets/README.md): Example datasets and access via an S3 bucket
-  - [`01-hplp.ipynb`](04-example-datasets/01-hplp.ipynb): open hplp-experiment datasets from the ECMWF S3 bucket
-  - [`02-OpenIFS.ipynb`](04-example-datasets/02-OpenIFS.ipynb): open OpenIFS-experiment datasets from the ECMWF S3 bucket 
-
+  - [`01-hplp.ipynb`](04-example-datasets/01-hplp.ipynb): open hplp-experiment dataset from the ECMWF S3 bucket
+  - [`02-OpenIFS.ipynb`](04-example-datasets/02-OpenIFS.ipynb): open OpenIFS-experiment dataset from the ECMWF S3 bucket
+  - [`03-NextGEMS.ipynb`](04-example-datasets/03-NextGEMS.ipynb): open NextGEMS-experiment dataset from the ECMWF S3 bucket
+  - [`04-ICONXPP.ipynb`](04-example-datasets/04-ICONXPP.ipynb): open ICON-XPP-experiment dataset from the ECMWF S3 bucket
 
 
 ## Getting Help and Contributing
