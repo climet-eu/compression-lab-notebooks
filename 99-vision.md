@@ -1,6 +1,6 @@
 # Our Vision: Fearless Lossy Compression
 
-Adopting lossy compression can be scary. Nobody wants to lose important real information when compressing their data. We want to make lossy compression fearless for weather and climate scientists so you specifically and we as a community can all benefit from higher compression ratios.
+Adopting lossy compression can be scary. Nobody wants to loose important real information when compressing their data. We want to make lossy compression fearless for weather and climate scientists so you specifically and we as a community can all benefit from higher compression ratios.
 
 We are working on the following three steps:
 
