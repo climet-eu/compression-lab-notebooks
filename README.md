@@ -32,7 +32,7 @@ If you intend on executing memory intensive workloads, it is best to continue wo
 ```{caution}
 In the online laboratory, changes to notebooks and local files are only saved in your web browser's storage and not persisted to disk.
 
-Please download copies of any files that you don't want to lose.
+Please download copies of any files that you don't want to loose.
 
 Your files from an old session will usually be kept if you close or refresh this page, unless your browser's storage for `lab.climet.eu` is cleared, e.g.
 - manually by clearing the browser's site data
