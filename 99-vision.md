@@ -15,7 +15,7 @@ We are working on the following three steps:
 
 We are reaching out to identify and take into account your requirements for lossy data compression. If you have a few minutes to spare, please contribute by
 
-1. Select one or more field variables that you work with
+1. Select one or more field variables that you work with, or add a row for a new variable
 
 2. Fill in or leave comments for one or more of
    - the variable's distribution
