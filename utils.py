@@ -1,21 +1,11 @@
-import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional, Union
-from urllib.parse import unquote as urlunquote
-from urllib.parse import urlparse
-
-import dask
-import ipyfilite
-import kerchunk
-import numpy as np
-import pandas as pd
-import sympy
-import xarray as xr
-import zarr
 
 
-def open_dataset(path: Path, **kwargs) -> xr.Dataset:
+def open_dataset(path: Path, **kwargs) -> "xarray.Dataset":
+    import xarray as xr
+
     path = Path(path)
 
     if path.suffix == ".grib" or kwargs.get("engine", None) == "cfgrib":
@@ -45,6 +35,8 @@ def open_dataset(path: Path, **kwargs) -> xr.Dataset:
 
 
 async def mount_user_local_file() -> Path:
+    import ipyfilite
+
     uploader = ipyfilite.FileUploadLite()
     await uploader.request()
     uploader.close()
@@ -53,6 +45,8 @@ async def mount_user_local_file() -> Path:
 
 
 def mount_http_file(url: str, name: Optional[str] = None) -> Path:
+    import ipyfilite
+
     if name is None:
         name = _get_name_from_url(url)
 
@@ -62,11 +56,14 @@ def mount_http_file(url: str, name: Optional[str] = None) -> Path:
 
 
 def _get_name_from_url(url: str) -> str:
+    from urllib.parse import unquote as urlunquote
+    from urllib.parse import urlparse
+
     return urlunquote(Path(urlparse(url).path).name)
 
 
 async def download_dataset_as_zarr(
-    ds: xr.Dataset,
+    ds: "xarray.Dataset",
     name: str,
     compressor: Union[
         "numcodecs.abc.Codec",
@@ -75,6 +72,9 @@ async def download_dataset_as_zarr(
     ],
     zip_compression: int = 0,
 ):
+    import ipyfilite
+    import zarr
+
     name_suffix = "".join(Path(name).suffixes)
 
     # Ensure that the file path is easily recognisable as a zipped zarr file
@@ -128,6 +128,8 @@ async def download_dataset_as_zarr(
 
 @asynccontextmanager
 async def file_download_path(name: str) -> Path:
+    import ipyfilite
+
     try:
         async with ipyfilite.FileDownloadPathLite(name) as path:
             yield path
@@ -139,6 +141,8 @@ def format_compress_stats(
     codecs: list["numcodecs.abc.Codec"],
     stats: list["fcbench.compressor.types.CodecPerformanceMeasurement"],
 ):
+    import pandas as pd
+
     table = pd.DataFrame(
         {
             "Codec": [],
@@ -177,6 +181,12 @@ def format_compress_stats(
 
 
 def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
+    import json
+
+    import kerchunk
+    import numpy as np
+    import sympy
+
     kc_new = kc
 
     # iterate over all variables
