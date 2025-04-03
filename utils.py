@@ -168,31 +168,31 @@ def format_compression_metrics(
 
     if instructions is not None:
         table["encode instructions [#/B]"] = [
-            round(
-                sum(instructions.encode_instructions.get(HashableCodec(c), []))
+            (round(
+                sum(instructions.encode_instructions[HashableCodec(c)])
                 / decoded_bytes[HashableCodec(c)],
                 1,
-            ) or None for c in codecs
+            ) if HashableCodec(c) in instructions.encode_instructions else "<unknown>") for c in codecs
         ] + ([
             round(
-                sum(sum(instructions.encode_instructions.get(HashableCodec(c), [])) for c in codecs)
+                sum(sum(instructions.encode_instructions[HashableCodec(c)]) for c in codecs)
                 / decoded_bytes[HashableCodec(codecs[0])],
                 1,
-            ) or None
+            ) if all(HashableCodec(c) in instructions.encode_instructions for c in codecs) else "<unknown>"
         ] if len(codecs) > 0 else [0.0])
 
         table["decode instructions [#/B]"] = [
-            round(
-                sum(instructions.decode_instructions.get(HashableCodec(c), []))
+            (round(
+                sum(instructions.decode_instructions[HashableCodec(c)])
                 / decoded_bytes[HashableCodec(c)],
                 1,
-            ) or None for c in codecs
+            ) if HashableCodec(c) in instructions.decode_instructions else "<unknown>") for c in codecs
         ] + ([
             round(
-                sum(sum(instructions.decode_instructions.get(HashableCodec(c), [])) for c in codecs)
+                sum(sum(instructions.decode_instructions[HashableCodec(c)]) for c in codecs)
                 / decoded_bytes[HashableCodec(codecs[0])],
                 1,
-            ) or None
+            ) if all(HashableCodec(c) in instructions.decode_instructions for c in codecs) else "<unknown>"
         ] if len(codecs) > 0 else [0.0])
 
     if timings is not None:
