@@ -66,11 +66,10 @@ def _get_name_from_url(url: str) -> str:
 async def download_dataset_as_zarr(
     ds: "xarray.Dataset",
     name: str,
-    compressor: Union[
-        "numcodecs.abc.Codec",
-        list["numcodecs.abc.Codec"],
-        dict[str, Union["numcodecs.abc.Codec", list["numcodecs.abc.Codec"]]],
-    ],
+    *,
+    filters: None | dict[str, "None | zarr.abc.codec.ArrayArrayCodec"],
+    serializer: "None | zarr.abc.codec.ArrayBytesCodec",
+    compressors: None | dict[str, "None | zarr.abc.codec.BytesBytesCodec"],
     zip_compression: int = 0,
 ):
     import ipyfilite
@@ -97,28 +96,31 @@ async def download_dataset_as_zarr(
             mode="x",
         )
 
+        filters = (
+            filters
+            if isinstance(filters, dict)
+            else {var: filters for var in ds}
+        )
+        serializer = (
+            serializer
+            if isinstance(serializer, dict)
+            else {var: serializer for var in ds}
+        )
         compressors = (
-            compressor
-            if isinstance(compressor, dict)
-            else {var: compressor for var in ds}
+            compressors
+            if isinstance(compressors, dict)
+            else {var: compressors for var in ds}
         )
 
         encoding = dict()
-        for var, compressor in compressors.items():
-            if isinstance(compressor, list):
-                if len(compressor) == 0:
-                    continue
-                encoding[var] = dict(
-                    compressors=[],
-                    serializer="auto",
-                    filters=compressor,
-                )
-            else:
-                encoding[var] = dict(
-                    compressors=[],
-                    serializer="auto",
-                    filters=[compressor],
-                )
+        for var in ds:
+            encoding[var] = dict(
+                filters=filters[var],
+                compressors=compressors[var],
+                **({
+                    "serializer": serializer[var]
+                } if serializer[var] is not None else {})
+            )
 
         ds.to_zarr(store=store, mode="w-", encoding=encoding)
 
