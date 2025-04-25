@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional, Union
@@ -65,11 +66,10 @@ def _get_name_from_url(url: str) -> str:
 async def download_dataset_as_zarr(
     ds: "xarray.Dataset",
     name: str,
-    compressor: Union[
-        "numcodecs.abc.Codec",
-        list["numcodecs.abc.Codec"],
-        dict[str, Union["numcodecs.abc.Codec", list["numcodecs.abc.Codec"]]],
-    ],
+    *,
+    filters: None | dict[str, "None | zarr.abc.codec.ArrayArrayCodec"],
+    serializer: "None | zarr.abc.codec.ArrayBytesCodec",
+    compressors: None | dict[str, "None | zarr.abc.codec.BytesBytesCodec"],
     zip_compression: int = 0,
 ):
     import ipyfilite
@@ -96,31 +96,36 @@ async def download_dataset_as_zarr(
             mode="x",
         )
 
+        filters = (
+            filters
+            if isinstance(filters, dict)
+            else {var: filters for var in ds}
+        )
+        serializer = (
+            serializer
+            if isinstance(serializer, dict)
+            else {var: serializer for var in ds}
+        )
         compressors = (
-            compressor
-            if isinstance(compressor, dict)
-            else {var: compressor for var in ds}
+            compressors
+            if isinstance(compressors, dict)
+            else {var: compressors for var in ds}
         )
 
         encoding = dict()
-        for var, compressor in compressors.items():
-            if isinstance(compressor, list):
-                if len(compressor) == 0:
-                    continue
-                encoding[var] = dict(
-                    compressor=compressor[0],
-                    filters=compressor[1:],
-                )
-            else:
-                encoding[var] = dict(
-                    compressor=compressor,
-                    filters=[],
-                )
+        for var in ds:
+            encoding[var] = dict(
+                filters=filters[var],
+                compressors=compressors[var],
+                **({
+                    "serializer": serializer[var]
+                } if serializer[var] is not None else {})
+            )
 
         ds.to_zarr(store=store, mode="w-", encoding=encoding)
 
-        for key in store.keys():
-            chunk_store[key] = store[key]
+        async for key in store.list():
+            await chunk_store.set(key, await store.get(key, zarr.core.buffer.core.default_buffer_prototype()))
 
         store.close()
         chunk_store.close()
@@ -137,45 +142,93 @@ async def file_download_path(name: str) -> Path:
         pass
 
 
-def format_compress_stats(
-    codecs: list["numcodecs.abc.Codec"],
-    stats: list["fcbench.compressor.types.CodecPerformanceMeasurement"],
+def format_compression_metrics(
+    codecs: Sequence["numcodecs.abc.Codec"],
+    *,
+    nbytes: "numcodecs_observers.bytesize.BytesizeObserver",
+    instructions: "None | numcodecs_wasm.WasmCodecInstructionCounterObserver" = None,
+    timings: "None | numcodecs_observers.walltime.WalltimeObserver" = None,
 ):
     import pandas as pd
+    from numcodecs_observers.hash import HashableCodec
+
+    codecs = tuple(codecs)
+
+    encoded_bytes = { c: sum(e.post for e in es) for c, es in nbytes.encode_sizes.items() }
+    decoded_bytes = { c: sum(d.post for d in ds) for c, ds in nbytes.decode_sizes.items() }
 
     table = pd.DataFrame(
         {
-            "Codec": [],
-            "compression ratio [raw B / enc B]": [],
-            "encode throughput [raw GB/s]": [],
-            "decode throughput [raw GB/s]": [],
-            "encode instructions [#/B]": [],
-            "decode instructions [#/B]": [],
+            "Codec": [str(c) for c in codecs] + ["Summary"],
+            "compression ratio [raw B / enc B]": [
+                round(decoded_bytes[HashableCodec(c)] / encoded_bytes[HashableCodec(c)], 2) for c in codecs
+            ] + ([
+                round(decoded_bytes[HashableCodec(codecs[0])] / encoded_bytes[HashableCodec(codecs[-1])], 2)
+            ] if len(codecs) > 0 else [1.0]),
         }
     ).set_index(["Codec"])
 
-    for codec, stat in zip(codecs, stats):
-        table.loc[str(codec), :] = [
-            round(stat.decoded_bytes / stat.encoded_bytes, 2),
+    if instructions is not None:
+        table["encode instructions [#/B]"] = [
+            (round(
+                sum(instructions.encode_instructions[HashableCodec(c)])
+                / decoded_bytes[HashableCodec(c)],
+                1,
+            ) if HashableCodec(c) in instructions.encode_instructions else "<unknown>") for c in codecs
+        ] + ([
+            round(
+                sum(sum(instructions.encode_instructions[HashableCodec(c)]) for c in codecs)
+                / decoded_bytes[HashableCodec(codecs[0])],
+                1,
+            ) if all(HashableCodec(c) in instructions.encode_instructions for c in codecs) else "<unknown>"
+        ] if len(codecs) > 0 else [0.0])
+
+        table["decode instructions [#/B]"] = [
+            (round(
+                sum(instructions.decode_instructions[HashableCodec(c)])
+                / decoded_bytes[HashableCodec(c)],
+                1,
+            ) if HashableCodec(c) in instructions.decode_instructions else "<unknown>") for c in codecs
+        ] + ([
+            round(
+                sum(sum(instructions.decode_instructions[HashableCodec(c)]) for c in codecs)
+                / decoded_bytes[HashableCodec(codecs[0])],
+                1,
+            ) if all(HashableCodec(c) in instructions.decode_instructions for c in codecs) else "<unknown>"
+        ] if len(codecs) > 0 else [0.0])
+
+    if timings is not None:
+        table["encode throughput [raw GB/s]"] = [
             round(
                 1e-9
-                * stat.decoded_bytes
-                / (stat.encode_timing.secs + stat.encode_timing.nanos * 1e-9),
+                * decoded_bytes[HashableCodec(c)]
+                / sum(timings.encode_times[HashableCodec(c)]),
                 2,
-            ),
+            ) for c in codecs
+        ] + ([
             round(
                 1e-9
-                * stat.decoded_bytes
-                / (stat.decode_timing.secs + stat.decode_timing.nanos * 1e-9),
+                * decoded_bytes[HashableCodec(codecs[0])]
+                / sum(sum(timings.encode_times[HashableCodec(c)]) for c in codecs),
                 2,
-            ),
-            round(stat.encode_instructions / stat.decoded_bytes, 1)
-            if stat.encode_instructions is not None
-            else None,
-            round(stat.decode_instructions / stat.decoded_bytes, 1)
-            if stat.decode_instructions is not None
-            else None,
-        ]
+            )
+        ] if len(codecs) > 0 else [0.0])
+        
+        table["decode throughput [raw GB/s]"] = [
+            round(
+                1e-9
+                * decoded_bytes[HashableCodec(c)]
+                / sum(timings.decode_times[HashableCodec(c)]),
+                2,
+            ) for c in codecs
+        ] + ([
+            round(
+                1e-9
+                * decoded_bytes[HashableCodec(codecs[0])]
+                / sum(sum(timings.decode_times[HashableCodec(c)]) for c in codecs),
+                2,
+            )
+        ] if len(codecs) > 0 else [0.0])
 
     return table
 
