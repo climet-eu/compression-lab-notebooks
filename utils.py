@@ -367,17 +367,25 @@ def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
 
 def quickplot(
     da: "xarray.DataArray",
-    vmin: None | float = None,
-    vmax: None | float = None,
+    vrange: None | tuple[float, float] = None,
     error: bool = False,
-    title: str = "{variable_name}",
+    title: str = "{default_title}",
+    time: None | str = None,
     **kwargs,
 ) -> None:
     import earthkit.plots
+    import earthkit.plots.utils.time_utils
     import numpy as np
 
-    vmin = np.nanmin(da) if vmin is None else vmin
-    vmax = np.nanmax(da) if vmax is None else vmax
+    if vrange is None:
+        vmin = np.nanmin(da)
+        vmax = np.nanmax(da)
+
+        if error:
+            vmax = max(abs(vmin), abs(vmax))
+            vmin = -vmax
+    else:
+        vmin, vmax = vrange
 
     # compute the default style that earthkit.plots would apply
     source = earthkit.plots.sources.get_source(da)
@@ -404,11 +412,30 @@ def quickplot(
     }[(extend_left, extend_right)]
     style._legend_kwargs["extend"] = extend
 
+    # extract datetime and provide it for plotting labels
+    time = None if time is None else source.metadata(time)
+    time = source.metadata("valid_time") if time is None else time
+    time = source.metadata("time") if time is None else time
+
+    class DataArray(da.__class__):
+        __slots__ = ()
+
+        def datetime(self):
+            datetime = (
+                None
+                if time is None
+                else earthkit.plots.utils.time_utils.to_pydatetime(time)
+            )
+            return {"base_time": datetime, "valid_time": datetime}
+
+    data = da.copy(deep=False)
+    data.__class__ = DataArray
+
     chart = earthkit.plots.Map()
-    chart.pcolormesh(da, style=style, **kwargs)
+    chart.pcolormesh(data, style=style, **kwargs)
     chart.coastlines()
     chart.gridlines()
     chart.legend()
-    chart.title(title)
+    chart.title(title.format(default_title=chart._default_title_template))
 
     chart.show()
