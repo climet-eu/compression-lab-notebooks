@@ -377,9 +377,12 @@ def quickplot(
     import earthkit.plots.utils.time_utils
     import numpy as np
 
+    da_min = np.nanmin(da)
+    da_max = np.nanmax(da)
+
     if vrange is None:
-        vmin = np.nanmin(da)
-        vmax = np.nanmax(da)
+        vmin = da_min
+        vmax = da_max
 
         if error:
             vmax = max(abs(vmin), abs(vmax))
@@ -401,8 +404,8 @@ def quickplot(
     if error:
         style._colors = "coolwarm"
 
-    extend_left = np.nanmin(da) < vmin
-    extend_right = np.nanmax(da) > vmax
+    extend_left = da_min < vmin
+    extend_right = da_max > vmax
 
     extend = {
         (False, False): "neither",
