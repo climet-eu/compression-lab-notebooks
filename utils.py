@@ -1,7 +1,15 @@
+import copy
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional, Union
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numcodecs
+    import numcodecs_observers
+    import numcodecs_wasm
+    import xarray
+    import zarr
 
 
 def open_dataset(path: Path, **kwargs) -> "xarray.Dataset":
@@ -45,7 +53,7 @@ async def mount_user_local_file() -> Path:
     return uploader.value[0].path
 
 
-def mount_http_file(url: str, name: Optional[str] = None) -> Path:
+def mount_http_file(url: str, name: None | str = None) -> Path:
     import ipyfilite
 
     if name is None:
@@ -96,11 +104,7 @@ async def download_dataset_as_zarr(
             mode="x",
         )
 
-        filters = (
-            filters
-            if isinstance(filters, dict)
-            else {var: filters for var in ds}
-        )
+        filters = filters if isinstance(filters, dict) else {var: filters for var in ds}
         serializer = (
             serializer
             if isinstance(serializer, dict)
@@ -117,15 +121,20 @@ async def download_dataset_as_zarr(
             encoding[var] = dict(
                 filters=filters[var],
                 compressors=compressors[var],
-                **({
-                    "serializer": serializer[var]
-                } if serializer[var] is not None else {})
+                **(
+                    {"serializer": serializer[var]}
+                    if serializer[var] is not None
+                    else {}
+                ),
             )
 
-        ds.to_zarr(store=store, mode="w-", encoding=encoding)
+        ds.to_zarr(store=store, mode="w-", encoding=encoding, consolidated=False)
 
         async for key in store.list():
-            await chunk_store.set(key, await store.get(key, zarr.core.buffer.core.default_buffer_prototype()))
+            await chunk_store.set(
+                key,
+                await store.get(key, zarr.core.buffer.core.default_buffer_prototype()),
+            )
 
         store.close()
         chunk_store.close()
@@ -154,48 +163,96 @@ def format_compression_metrics(
 
     codecs = tuple(codecs)
 
-    encoded_bytes = { c: sum(e.post for e in es) for c, es in nbytes.encode_sizes.items() }
-    decoded_bytes = { c: sum(d.post for d in ds) for c, ds in nbytes.decode_sizes.items() }
+    encoded_bytes = {
+        c: sum(e.post for e in es) for c, es in nbytes.encode_sizes.items()
+    }
+    decoded_bytes = {
+        c: sum(d.post for d in ds) for c, ds in nbytes.decode_sizes.items()
+    }
 
     table = pd.DataFrame(
         {
             "Codec": [str(c) for c in codecs] + ["Summary"],
             "compression ratio [raw B / enc B]": [
-                round(decoded_bytes[HashableCodec(c)] / encoded_bytes[HashableCodec(c)], 2) for c in codecs
-            ] + ([
-                round(decoded_bytes[HashableCodec(codecs[0])] / encoded_bytes[HashableCodec(codecs[-1])], 2)
-            ] if len(codecs) > 0 else [1.0]),
+                round(
+                    decoded_bytes[HashableCodec(c)] / encoded_bytes[HashableCodec(c)], 2
+                )
+                for c in codecs
+            ]
+            + (
+                [
+                    round(
+                        decoded_bytes[HashableCodec(codecs[0])]
+                        / encoded_bytes[HashableCodec(codecs[-1])],
+                        2,
+                    )
+                ]
+                if len(codecs) > 0
+                else [1.0]
+            ),
         }
     ).set_index(["Codec"])
 
     if instructions is not None:
         table["encode instructions [#/B]"] = [
-            (round(
-                sum(instructions.encode_instructions[HashableCodec(c)])
-                / decoded_bytes[HashableCodec(c)],
-                1,
-            ) if HashableCodec(c) in instructions.encode_instructions else "<unknown>") for c in codecs
-        ] + ([
-            round(
-                sum(sum(instructions.encode_instructions[HashableCodec(c)]) for c in codecs)
-                / decoded_bytes[HashableCodec(codecs[0])],
-                1,
-            ) if all(HashableCodec(c) in instructions.encode_instructions for c in codecs) else "<unknown>"
-        ] if len(codecs) > 0 else [0.0])
+            (
+                round(
+                    sum(instructions.encode_instructions[HashableCodec(c)])
+                    / decoded_bytes[HashableCodec(c)],
+                    1,
+                )
+                if HashableCodec(c) in instructions.encode_instructions
+                else "<unknown>"
+            )
+            for c in codecs
+        ] + (
+            [
+                round(
+                    sum(
+                        sum(instructions.encode_instructions[HashableCodec(c)])
+                        for c in codecs
+                    )
+                    / decoded_bytes[HashableCodec(codecs[0])],
+                    1,
+                )
+                if all(
+                    HashableCodec(c) in instructions.encode_instructions for c in codecs
+                )
+                else "<unknown>"
+            ]
+            if len(codecs) > 0
+            else [0.0]
+        )
 
         table["decode instructions [#/B]"] = [
-            (round(
-                sum(instructions.decode_instructions[HashableCodec(c)])
-                / decoded_bytes[HashableCodec(c)],
-                1,
-            ) if HashableCodec(c) in instructions.decode_instructions else "<unknown>") for c in codecs
-        ] + ([
-            round(
-                sum(sum(instructions.decode_instructions[HashableCodec(c)]) for c in codecs)
-                / decoded_bytes[HashableCodec(codecs[0])],
-                1,
-            ) if all(HashableCodec(c) in instructions.decode_instructions for c in codecs) else "<unknown>"
-        ] if len(codecs) > 0 else [0.0])
+            (
+                round(
+                    sum(instructions.decode_instructions[HashableCodec(c)])
+                    / decoded_bytes[HashableCodec(c)],
+                    1,
+                )
+                if HashableCodec(c) in instructions.decode_instructions
+                else "<unknown>"
+            )
+            for c in codecs
+        ] + (
+            [
+                round(
+                    sum(
+                        sum(instructions.decode_instructions[HashableCodec(c)])
+                        for c in codecs
+                    )
+                    / decoded_bytes[HashableCodec(codecs[0])],
+                    1,
+                )
+                if all(
+                    HashableCodec(c) in instructions.decode_instructions for c in codecs
+                )
+                else "<unknown>"
+            ]
+            if len(codecs) > 0
+            else [0.0]
+        )
 
     if timings is not None:
         table["encode throughput [raw GB/s]"] = [
@@ -204,31 +261,41 @@ def format_compression_metrics(
                 * decoded_bytes[HashableCodec(c)]
                 / sum(timings.encode_times[HashableCodec(c)]),
                 2,
-            ) for c in codecs
-        ] + ([
-            round(
-                1e-9
-                * decoded_bytes[HashableCodec(codecs[0])]
-                / sum(sum(timings.encode_times[HashableCodec(c)]) for c in codecs),
-                2,
             )
-        ] if len(codecs) > 0 else [0.0])
-        
+            for c in codecs
+        ] + (
+            [
+                round(
+                    1e-9
+                    * decoded_bytes[HashableCodec(codecs[0])]
+                    / sum(sum(timings.encode_times[HashableCodec(c)]) for c in codecs),
+                    2,
+                )
+            ]
+            if len(codecs) > 0
+            else [0.0]
+        )
+
         table["decode throughput [raw GB/s]"] = [
             round(
                 1e-9
                 * decoded_bytes[HashableCodec(c)]
                 / sum(timings.decode_times[HashableCodec(c)]),
                 2,
-            ) for c in codecs
-        ] + ([
-            round(
-                1e-9
-                * decoded_bytes[HashableCodec(codecs[0])]
-                / sum(sum(timings.decode_times[HashableCodec(c)]) for c in codecs),
-                2,
             )
-        ] if len(codecs) > 0 else [0.0])
+            for c in codecs
+        ] + (
+            [
+                round(
+                    1e-9
+                    * decoded_bytes[HashableCodec(codecs[0])]
+                    / sum(sum(timings.decode_times[HashableCodec(c)]) for c in codecs),
+                    2,
+                )
+            ]
+            if len(codecs) > 0
+            else [0.0]
+        )
 
     return table
 
@@ -283,7 +350,9 @@ def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
 
                 # use kerchunk to apply the new chunking
                 kc_new = kerchunk.utils.subchunk(
-                    kc_new, Path(k).parts[0], factor,
+                    kc_new,
+                    Path(k).parts[0],
+                    factor,
                 )
 
                 chunks[i] = chunks[i] // factor
@@ -294,3 +363,82 @@ def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
                     break
 
     return kc_new
+
+
+def quickplot(
+    da: "xarray.DataArray",
+    vrange: None | tuple[float, float] = None,
+    error: bool = False,
+    title: str = "{default_title}",
+    time: None | str = None,
+    **kwargs,
+) -> None:
+    import earthkit.plots
+    import earthkit.plots.utils.time_utils
+    import numpy as np
+
+    da_min = np.nanmin(da)
+    da_max = np.nanmax(da)
+
+    if vrange is None:
+        vmin = da_min
+        vmax = da_max
+
+        if error:
+            vmax = max(abs(vmin), abs(vmax))
+            vmin = -vmax
+    else:
+        vmin, vmax = vrange
+
+    # compute the default style that earthkit.plots would apply
+    source = earthkit.plots.sources.get_source(da)
+    style = copy.deepcopy(
+        earthkit.plots.styles.auto.guess_style(
+            source,
+            units=getattr(da, "units", "1"),
+        )
+    )
+    style._levels = earthkit.plots.styles.levels.Levels(np.linspace(vmin, vmax, 22))
+    style._legend_kwargs["ticks"] = np.linspace(vmin, vmax, 5)
+
+    if error:
+        style._colors = "coolwarm"
+
+    extend_left = da_min < vmin
+    extend_right = da_max > vmax
+
+    extend = {
+        (False, False): "neither",
+        (True, False): "min",
+        (False, True): "max",
+        (True, True): "both",
+    }[(extend_left, extend_right)]
+    style._legend_kwargs["extend"] = extend
+
+    # extract datetime and provide it for plotting labels
+    time = None if time is None else source.metadata(time)
+    time = source.metadata("valid_time") if time is None else time
+    time = source.metadata("time") if time is None else time
+
+    class DataArray(da.__class__):
+        __slots__ = ()
+
+        def datetime(self):
+            datetime = (
+                None
+                if time is None
+                else earthkit.plots.utils.time_utils.to_pydatetime(time)
+            )
+            return {"base_time": datetime, "valid_time": datetime}
+
+    data = da.copy(deep=False)
+    data.__class__ = DataArray
+
+    chart = earthkit.plots.Map()
+    chart.pcolormesh(data, style=style, **kwargs)
+    chart.coastlines()
+    chart.gridlines()
+    chart.legend()
+    chart.title(title.format(default_title=chart._default_title_template))
+
+    chart.show()
