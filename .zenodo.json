@@ -1,0 +1,39 @@
+{
+  "title": "climet-eu/compression-lab-notebooks",
+  "description": "Jupyter Notebooks for the Online Laboratory for Data Compression in Climate Science and Meteorology",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Tyree, Juniper",
+      "affiliation": "University of Helsinki",
+      "orcid": "0000-0002-7923-9609"
+    },
+    {
+      "name": "Faghih-Naini, Sara",
+      "affiliation": "European Centre for Medium-Range Weather Forecasts",
+      "orcid": "0009-0009-1880-2822"
+    }
+  ],
+  "keywords": ["laboratory", "compression", "jupyter-notebooks"],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/climet-eu/compression-lab-notebooks/tree/v0.4.0",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "version": "v0.4.0",
+  "upload_type": "software",
+  "license": "cc-by-4.0",
+  "grants": [
+    {
+      "id": "10.13039/501100000780::101093054"
+    },
+    {
+      "id": "10.13039/501100000780::675191"
+    }
+  ],
+  "communities": [{ "identifier": "eu" }, { "identifier": "esiwace" }],
+  "notes": "If you use this software, please cite it using the metadata from the CITATIONS.cff file."
+}
