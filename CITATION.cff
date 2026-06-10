@@ -1,0 +1,34 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: climet-eu/compression-lab-notebooks
+message: >-
+  If you use this software, please cite it using the
+  metadata from the CITATIONS.cff file.
+type: software
+authors:
+  - given-names: Juniper
+    family-names: Tyree
+    email: juniper.tyree@helsinki.fi
+    affiliation: University of Helsinki
+    orcid: 'https://orcid.org/0000-0002-7923-9609'
+  - given-names: Sara
+    family-names: Faghih-Naini
+    affiliation: European Centre for Medium-Range Weather Forecasts
+    orcid: 'https://orcid.org/0009-0009-1880-2822'
+    email: sara.faghihnaini@ecmwf.int
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.14526225
+    description: Zenodo
+repository-code: 'https://github.com/climet-eu/compression-lab-notebooks'
+url: 'https://docs.climet.eu/compression/'
+abstract: >-
+  Jupyter Notebooks for the Online Laboratory for Data
+  Compression in Climate Science and Meteorology
+keywords:
+  - laboratory
+  - compression
+  - jupyter-notebooks
+license: CC-BY-4.0
