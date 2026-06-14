@@ -10,7 +10,17 @@ project:
     - jupyter-notebooks
   authors:
     - name: Juniper Tyree
+      orcid: 0000-0002-7923-9609
+      affiliations:
+        - name: University of Helsinki
+          ror: 040af2s02
+      github: juntyr
     - name: Sara Faghih-Naini
+      orcid: 0009-0009-1880-2822
+      affiliations:
+        - name: European Centre for Medium-Range Weather Forecasts
+          ror: 014w0fd65
+      github: SF-N
   github: https://github.com/climet-eu/compression-lab-notebooks
   toc:
     - file: README.md
