@@ -1,0 +1,4 @@
+[dependency-groups]
+book = [
+    "jupyter-book~=2.1.5",
+]
