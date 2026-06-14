@@ -1,1 +1,6 @@
 **/.DS_Store
+
+/uv.lock
+
+# MyST build outputs
+/_build

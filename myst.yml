@@ -1,0 +1,42 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: 01750f04-9603-4df1-bc70-e377a0797410
+  title: Online Compression Laboratory
+  description: Online Laboratory for Data Compression in Climate Science and Meteorology
+  keywords:
+    - laboratory
+    - compression
+    - jupyter-notebooks
+  authors:
+    - name: Juniper Tyree
+    - name: Sara Faghih-Naini
+  github: https://github.com/climet-eu/compression-lab-notebooks
+  toc:
+    - file: README.md
+    - file: 01-intro.ipynb
+    - title: Data Sources
+      children:
+        - file: 02-data-sources/01-local.ipynb
+        - file: 02-data-sources/02-remote.ipynb
+        - file: 02-data-sources/03-cdsapi.ipynb
+        - file: 02-data-sources/04-ecmwfapi.ipynb
+        - file: 02-data-sources/README.md
+    - title: Examples
+      children:
+        - file: 03-examples/01-compressors.ipynb
+        - file: 03-examples/README.md
+    - title: Example Datasets
+      children:
+        - file: 04-example-datasets/01-hplp.ipynb
+        - file: 04-example-datasets/02-OpenIFS.ipynb
+        - file: 04-example-datasets/03-NextGEMS.ipynb
+        - file: 04-example-datasets/04-ICONXPP.ipynb
+        - file: 04-example-datasets/README.md
+    - file: 99-vision.md
+
+site:
+  template: book-theme
+  options:
+    favicon: static/favicons/favicon.ico
+    logo: static/favicons/esiwace.svg
