@@ -8,6 +8,7 @@ project:
     - laboratory
     - compression
     - jupyter-notebooks
+  license: CC-BY-4.0
   authors:
     - name: Juniper Tyree
       orcid: 0000-0002-7923-9609
