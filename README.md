@@ -90,6 +90,7 @@ The following is an overview of all notebooks:
   - [`03-OpenIFS.ipynb`](02-datasets/03-OpenIFS.ipynb): OpenIFS dataset
   - [`04-NextGEMS.ipynb`](02-datasets/04-NextGEMS.ipynb): NextGEMS dataset
   - [`05-ICONXPP.ipynb`](02-datasets/05-ICONXPP.ipynb): ICON-XPP dataset
+  - [`06-ERA5.ipynb`](02-datasets/06-ERA5.ipynb): ERA5 dataset
 - [`03-compressors/`](03-compressors/README.md): Overview of popular compressors
   - [`01-bit-round.ipynb`](03-compressors/01-bit-round.ipynb): Bit rounding
   - [`02-zfp.ipynb`](03-compressors/02-zfp.ipynb): ZFP

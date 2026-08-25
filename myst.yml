@@ -40,6 +40,7 @@ project:
         - file: 02-datasets/03-OpenIFS.ipynb
         - file: 02-datasets/04-NextGEMS.ipynb
         - file: 02-datasets/05-ICONXPP.ipynb
+        - file: 02-datasets/06-ERA5.ipynb
     - title: Compressor Overviews
       file: 03-compressors/README.md
       children:
