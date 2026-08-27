@@ -19,7 +19,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check with ruff
         uses: astral-sh/ruff-action@v3
@@ -33,7 +33,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Spellcheck repo
         uses: crate-ci/typos@v1
@@ -45,7 +45,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check with ruff
         uses: astral-sh/ruff-action@v3
@@ -59,7 +59,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout the Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Validate CITATION.cff
         uses: dieghernan/cff-validator@v5
