@@ -65,15 +65,14 @@ The following is an overview of all notebooks:
   - [`04-NextGEMS.ipynb`](03-example-datasets/04-example-datasets/03-NextGEMS.ipynb): open NextGEMS-experiment dataset from the ECMWF S3 bucket
   - [`05-ICONXPP.ipynb`](04-example-datasets/05-ICONXPP.ipynb): open ICON-XPP-experiment dataset from the ECMWF S3 bucket
 - [`04-examples-compressors/`](04-examples-compressors/README.md): Example walkthrough to use compressors
-  - [`01-intro-numcodec.ipynb`](04-examples-compressors/01-intro-numcodec.ipynb): Introduction about the numcodecs
-  - [`02-bit-round.ipynb`](04-examples-compressors/02-bit-round.ipynb): Introduction about the bit-round compressor
-  - [`03-zfp.ipynb`](04-examples-compressors/03-zfp.ipynb): Introduction about the zfp compressor
-  - [`04-sperr.ipynb`](04-examples-compressors/04-sperr.ipynb): Introduction about the sperr compressor
-  - [`05-ebcc.ipynb`](04-examples-compressors/05-ebcc.ipynb): Introduction about the ebcc compressor
-  - [`06-lc.ipynb`](04-examples-compressors/06-lc.ipynb): Introduction about the lc compressor
-  - [`07-sz3.ipynb`](04-examples-compressors/07-sz3.ipynb): Introduction about the sz3 compressor
-  - [`08-pressio.ipynb`](04-examples-compressors/08-pressio.ipynb): Introduction about the pressio compressor
-  - [`09-safeguards.ipynb`](04-examples-compressors/09-safeguards.ipynb): Introduction about the safeguards compressor suite
+  - [`01-bit-round.ipynb`](04-examples-compressors/01-bit-round.ipynb): Introduction about the bit-round compressor
+  - [`02-zfp.ipynb`](04-examples-compressors/02-zfp.ipynb): Introduction about the zfp compressor
+  - [`03-sperr.ipynb`](04-examples-compressors/03-sperr.ipynb): Introduction about the sperr compressor
+  - [`04-ebcc.ipynb`](04-examples-compressors/04-ebcc.ipynb): Introduction about the ebcc compressor
+  - [`05-lc.ipynb`](04-examples-compressors/05-lc.ipynb): Introduction about the lc compressor
+  - [`06-sz3.ipynb`](04-examples-compressors/06-sz3.ipynb): Introduction about the sz3 compressor
+  - [`07-pressio.ipynb`](04-examples-compressors/07-pressio.ipynb): Introduction about the pressio compressor
+  - [`08-safeguards.ipynb`](04-examples-compressors/08-safeguards.ipynb): Introduction about the safeguards compressor suite
 - [`04-examples-compressors/`](05-Challenges/README.md): Example challenges of applying data compression
   - [`01-nan-challenge.ipynb`](05-Challenges/01-nan-challenge.ipynb): Introduction to the nan values compression challenge
   - [`02-eb-rel-challenge.ipynb`](05-Challenges/02-eb-rel-challenge.ipynb): Introduction to the pointwise compression challenge, here you will be introduce on how to preserve the pointwise relative error bound on precipitation data
