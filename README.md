@@ -1,6 +1,6 @@
-# Online Laboratory for Data Compression in Climate Science and Meteorology
+# Online Laboratory for ESiWACE3 Data compression hackathon
 
-Welcome to the **Online Laboratory for Data Compression in Climate Science and Meteorology**!
+Welcome to the **Online Laboratory for ESiWACE3 Data compression hackathon**!
 
 If you are familiar with [JupyterLab](https://jupyter.org/), you should feel right at home with the user interface of this lab. You can use the JupyterLab interface at [/lab](https://lab.climet.eu/latest/lab) and a REPL interface at [/repl](https://lab.climet.eu/latest/repl).
 
@@ -44,7 +44,7 @@ Your files from an old session will usually be kept if you close or refresh this
 
 ## Overview of the provided notebooks
 
-The **Online Laboratory for Data Compression** comes with several Jupyter notebook examples to
+The **Online Laboratory for ESiWACE3 Data compression hackathon** comes with several Jupyter notebook examples to
 
 1. introduce you to its functionality
 2. showcase different compression methods on various weather and climate datasets
@@ -58,14 +58,26 @@ The following is an overview of all notebooks:
   - [`02-remote.ipynb`](02-data-sources/02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
   - [`03-cdsapi.ipynb`](02-data-sources/03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
   - [`04-ecmwfapi.ipynb`](02-data-sources/04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
-- [`03-examples/`](03-examples/README.md): Longer walkthrough examples that apply and evaluate data compression on different variables
-  - [`01-compressors.ipynb`](03-examples/01-compressors.ipynb): comparison of different compressors on a small temperature and specific humidity dataset
-- [`04-example-datasets/`](04-example-datasets/README.md): Example datasets and access via an S3 bucket
-  - [`01-hplp.ipynb`](04-example-datasets/01-hplp.ipynb): open hplp-experiment dataset from the ECMWF S3 bucket
-  - [`02-OpenIFS.ipynb`](04-example-datasets/02-OpenIFS.ipynb): open OpenIFS-experiment dataset from the ECMWF S3 bucket
-  - [`03-NextGEMS.ipynb`](04-example-datasets/03-NextGEMS.ipynb): open NextGEMS-experiment dataset from the ECMWF S3 bucket
-  - [`04-ICONXPP.ipynb`](04-example-datasets/04-ICONXPP.ipynb): open ICON-XPP-experiment dataset from the ECMWF S3 bucket
-
+- [`03-example-datasets/`](04-example-datasets/README.md): Example datasets and access via an S3 bucket
+  - [`01-dataset.ipynb`](03-example-datasets/01-datatset.ipynb): example with some pre-loaded images
+  - [`02-hplp.ipynb`](03-example-datasets/02-hplp.ipynb): open hplp-experiment dataset from the ECMWF S3 bucket
+  - [`03-OpenIFS.ipynb`](03-example-datasets/03-example-datasets/02-OpenIFS.ipynb): open OpenIFS-experiment dataset from the ECMWF S3 bucket
+  - [`04-NextGEMS.ipynb`](03-example-datasets/04-example-datasets/03-NextGEMS.ipynb): open NextGEMS-experiment dataset from the ECMWF S3 bucket
+  - [`05-ICONXPP.ipynb`](04-example-datasets/05-ICONXPP.ipynb): open ICON-XPP-experiment dataset from the ECMWF S3 bucket
+- [`04-examples-compressors/`](04-examples-compressors/README.md): Example walkthrough to use compressors
+  - [`01-intro-numcodec.ipynb`](04-examples-compressors/01-intro-numcodec.ipynb): Introduction about the numcodecs
+  - [`02-bit-round.ipynb`](04-examples-compressors/02-bit-round.ipynb): Introduction about the bit-round compressor
+  - [`03-zfp.ipynb`](04-examples-compressors/03-zfp.ipynb): Introduction about the zfp compressor
+  - [`04-sperr.ipynb`](04-examples-compressors/04-sperr.ipynb): Introduction about the sperr compressor
+  - [`05-ebcc.ipynb`](04-examples-compressors/05-ebcc.ipynb): Introduction about the ebcc compressor
+  - [`06-lc.ipynb`](04-examples-compressors/06-lc.ipynb): Introduction about the lc compressor
+  - [`07-sz3.ipynb`](04-examples-compressors/07-sz3.ipynb): Introduction about the sz3 compressor
+  - [`08-pressio.ipynb`](04-examples-compressors/08-pressio.ipynb): Introduction about the pressio compressor
+  - [`09-safeguards.ipynb`](04-examples-compressors/09-safeguards.ipynb): Introduction about the safeguards compressor suite
+- [`04-examples-compressors/`](05-Challenges/README.md): Example challenges of applying data compression
+  - [`01-nan-challenge.ipynb`](05-Challenges/01-nan-challenge.ipynb): Introduction to the nan values compression challenge
+  - [`02-eb-rel-challenge.ipynb`](05-Challenges/02-eb-rel-challenge.ipynb): Introduction to the pointwise compression challenge, here you will be introduce on how to preserve the pointwise relative error bound on precipitation data
+  - [`03-gradient.ipynb`](05-Challenges/03-gradient.ipynb): Introduction about the gradient compression challenge, here you will be introduce to preserve gradient value along the longitude
 
 ## Getting Help and Contributing
 

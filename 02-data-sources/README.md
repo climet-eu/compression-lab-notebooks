@@ -1,6 +1,6 @@
 # Opening datasets from different sources
 
-The **Online Laboratory for Data Compression** is built so you can explore various data compression approaches on different datasets, including your own. Since the online lab runs in your web browser, which has limited memory and is isolated from your filesystem for security, the lab supports several approaches to access both small and large datasets from different sources.
+The **Online Laboratory for ESiWACE3 Data compression hackathon** is built so you can explore various data compression approaches on different datasets, including your own. Since the online lab runs in your web browser, which has limited memory and is isolated from your filesystem for security, the lab supports several approaches to access both small and large datasets from different sources.
 
 
 ## Overview of the provided notebooks
