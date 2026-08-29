@@ -377,6 +377,15 @@ def quickplot(
     import earthkit.plots.utils.time_utils
     import numpy as np
 
+    def fallback_title():
+        return (
+            da.attrs.get("long_name")
+            or da.attrs.get("name")
+            or da.attrs.get("standard_name")
+            or da.name
+            or "Field"
+        )
+
     da_min = np.nanmin(da)
     da_max = np.nanmax(da)
 
@@ -439,6 +448,11 @@ def quickplot(
     chart.coastlines()
     chart.gridlines()
     chart.legend()
-    chart.title(title.format(default_title=chart._default_title_template))
+    try:
+        chart.title(title.format(default_title=chart._default_title_template))
+    except TypeError:
+        if title != "{default_title}":
+            raise
+        chart.title(fallback_title())
 
     chart.show()
