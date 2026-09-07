@@ -21,15 +21,14 @@ def open_dataset(path: Path, **kwargs) -> "xarray.Dataset":
         if "engine" not in kwargs:
             kwargs["engine"] = "cfgrib"
         if "backend_kwargs" not in kwargs:
-            kwargs["backend_kwargs"] = dict()
+            kwargs["backend_kwargs"] = {}
         if "indexpath" not in kwargs["backend_kwargs"]:
             # cfgrib creates index files right next to the data file,
             #  which may be in a read-only file system
             kwargs["backend_kwargs"]["indexpath"] = ""
 
-    if "".join(path.suffixes).endswith(".zarr.zip"):
-        if "engine" not in kwargs:
-            kwargs["engine"] = "zarr"
+    if "".join(path.suffixes).endswith(".zarr.zip") and "engine" not in kwargs:
+        kwargs["engine"] = "zarr"
 
     if "chunks" not in kwargs:
         kwargs["chunks"] = "auto"
@@ -116,7 +115,7 @@ async def download_dataset_as_zarr(
             else {var: compressors for var in ds}
         )
 
-        encoding = dict()
+        encoding = {}
         for var in ds:
             encoding[var] = dict(
                 filters=filters[var],
@@ -329,10 +328,10 @@ def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
             if nbytes_chunk <= chunk_size:
                 continue
 
-            for i, c in enumerate(chunks):
+            for i, chunk in enumerate(chunks):
                 # factorize the remaining chunk size
                 factors = []
-                for f, c in sympy.factorint(c).items():
+                for f, c in sympy.factorint(chunk).items():
                     for _ in range(c):
                         factors.append(f)
                 factors.sort()
@@ -367,15 +366,36 @@ def kerchunk_autochunk(kc: dict, *, chunk_size: int) -> dict:
 
 def quickplot(
     da: "xarray.DataArray",
+    /,
+    chart=None,
+    *,
+    method: str = "pcolormesh",
     vrange: None | tuple[float, float] = None,
     error: bool = False,
     title: str = "{default_title}",
     time: None | str = None,
+    cr: None | float = None,
     **kwargs,
 ) -> None:
     import earthkit.plots
     import earthkit.plots.utils.time_utils
+    import matplotlib.pyplot as plt
     import numpy as np
+
+    if "x" not in kwargs:
+        for x in ["lon", "longitude"]:
+            if x in da.dims:
+                kwargs["x"] = x
+                break
+    if "y" not in kwargs:
+        for y in ["lat", "latitude"]:
+            if y in da.dims:
+                kwargs["y"] = y
+                break
+    if "x" in kwargs and "y" in kwargs:
+        da = da.isel(
+            {d: slice(None) if d in (kwargs["x"], kwargs["y"]) else 0 for d in da.dims}
+        )
 
     da_min = np.nanmin(da)
     da_max = np.nanmax(da)
@@ -413,10 +433,12 @@ def quickplot(
         (False, True): "max",
         (True, True): "both",
     }[(extend_left, extend_right)]
+    style._kwargs["extend"] = extend
     style._legend_kwargs["extend"] = extend
 
     # extract datetime and provide it for plotting labels
     time = None if time is None else source.metadata(time)
+    time = source.metadata("time_counter") if time is None else time
     time = source.metadata("valid_time") if time is None else time
     time = source.metadata("time") if time is None else time
 
@@ -434,11 +456,39 @@ def quickplot(
     data = da.copy(deep=False)
     data.__class__ = DataArray
 
-    chart = earthkit.plots.Map()
-    chart.pcolormesh(data, style=style, **kwargs)
+    create_chart = chart is None
+    chart = earthkit.plots.Map() if chart is None else chart
+
+    chart.ax.fill_between(
+        [0, 1],
+        [1, 1],
+        hatch="X",
+        edgecolor="magenta" if error else "white",
+        facecolor="lavenderblush" if error else "lightgrey",
+        transform=chart.ax.transAxes,
+        zorder=-999,
+    )
+
+    getattr(chart, method)(data, style=style, **kwargs)
+
     chart.coastlines()
     chart.gridlines()
     chart.legend()
     chart.title(title.format(default_title=chart._default_title_template))
 
-    chart.show()
+    if cr is not None:
+        t = chart.ax.text(
+            0.95,
+            0.9,
+            rf"$\times$ {np.round(cr, 2)}",
+            ha="right",
+            va="top",
+            transform=chart.ax.transAxes,
+        )
+        t.set_bbox({"facecolor": "white", "alpha": 0.75, "edgecolor": "black"})
+
+    if create_chart:
+        chart.show()
+
+        plt.clf()
+        plt.close("all")
