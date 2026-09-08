@@ -33,15 +33,15 @@ project:
     - file: README.md
     - file: 01-compression.ipynb
     - title: Example Datasets
-      file: 02-datasets/README.md  
+      file: 02-datasets/README.md
       children:
-        - file: 02-datasets/01-preprocessed.ipynb  
+        - file: 02-datasets/01-preprocessed.ipynb
         - file: 02-datasets/02-hplp.ipynb
         - file: 02-datasets/03-OpenIFS.ipynb
         - file: 02-datasets/04-NextGEMS.ipynb
         - file: 02-datasets/05-ICONXPP.ipynb
     - title: Compressor Overviews
-      file: 03-compressors/README.md  
+      file: 03-compressors/README.md
       children:
         - file: 03-compressors/01-bit-round.ipynb
         - file: 03-compressors/02-zfp.ipynb
@@ -61,12 +61,13 @@ project:
     - title: Appendices
       children:
         - title: "Appendix A: Data Sources"
-          file: 05-appendices/01-data-sources/README.md  
+          file: 05-appendices/01-data-sources/README.md
           children:
             - file: 05-appendices/01-data-sources/01-local.ipynb
             - file: 05-appendices/01-data-sources/02-remote.ipynb
             - file: 05-appendices/01-data-sources/03-cdsapi.ipynb
             - file: 05-appendices/01-data-sources/04-ecmwfapi.ipynb
+  #bibliography: .myst/doi.bib
 
 site:
   template: book-theme
