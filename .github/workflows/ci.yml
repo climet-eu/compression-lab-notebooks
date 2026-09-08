@@ -82,5 +82,5 @@ jobs:
       - name: Install Jupyter Book
         run: uv sync --group book
 
-      - name: Build HTML Assets
+      - name: Check hyperlinks
         run: uv run jupyter-book build --ci --check-links --strict
