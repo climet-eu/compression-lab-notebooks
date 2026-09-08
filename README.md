@@ -66,8 +66,9 @@ The following is an overview of all notebooks:
   - [`04-ebcc.ipynb`](03-compressors/04-ebcc.ipynb): EBCC
   - [`05-lc.ipynb`](03-compressors/05-lc.ipynb): LC
   - [`06-sz3.ipynb`](03-compressors/06-sz3.ipynb): SZ3
-  - [`07-pressio.ipynb`](03-compressors/07-pressio.ipynb): Pressio
+  - [`07-pressio.ipynb`](03-compressors/07-pressio.ipynb): LibPressio
   - [`08-safeguards.ipynb`](03-compressors/08-safeguards.ipynb): Compression Safeguards
+  - [`09-random-projection.ipynb`](03-compressors/09-random-projection.ipynb): Random Projection
 - [`04-challenges/`](04-challenges/README.md): Compression challenges
   - [`01-nan-missing-values.ipynb`](04-challenges/01-nan-missing-values.ipynb): NaN missing values
   - [`02-relative-error-bound.ipynb`](04-challenges/02-relative-error-bound.ipynb): Pointwise relative error bound
