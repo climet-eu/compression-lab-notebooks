@@ -1,66 +1,105 @@
-# Online Laboratory for ESiWACE3 Data compression hackathon
+# Online Laboratory for Data Compression in Climate Science and Meteorology
 
-Welcome to the **Online Laboratory for ESiWACE3 Data compression hackathon**!
+Welcome to the **Online Laboratory for Data Compression in Climate Science and Meteorology**!
 
-If you are familiar with [JupyterLab](https://jupyter.org/), you should feel right at home with the user interface of this lab. You can use the JupyterLab interface at [/lab](https://lab.climet.eu/latest/lab) and a REPL interface at [/repl](https://lab.climet.eu/latest/repl).
+This laboratory consists of several Jupyter notebooks that introduce lossy compression of weather and climate datasets, gives an overview of available compressors, and sets out several compression challenges.
 
-In fact, this laboratory is built using [JupyterLite](https://jupyterlite.readthedocs.io/en/stable/), "a JupyterLab distribution that runs entirely in [your] browser" by leveraging WebAssembly. In other words, while you typically need to install JupyterLab on your own machine or connect to a server that executes your code, JupyterLite runs installation-free in your webbrowser and allows your code, data, and information to stay entirely on your machine. To run Python code within your browser, JupyterLite uses [Pyodide](https://pyodide.org/en/stable/), "a Python distribution for the browser [...] based on WebAssembly".
-
-While Pyodide already supports an extensive list of scientific Python packages, which we have contributed to, this laboratory comes with additional packages that are commonly used in the weather and climate science community, including (but not limited to) `metpy`, `cfgrib`, `earthkit`, and `xeofs`.
+You can read through the notebooks in [book form](https://climet-eu.github.io/compression-lab-notebooks/) or follow along in your own [JupyterLab](https://jupyter.org/) environment.
 
 
 ## Getting Started
 
-To get started, click the blue `+` button in the top left to open a new launcher and create a new Python notebook from there. After the Python kernel has initialised, you can execute Python code in the cells of the notebook.
+### (a) Local installation
 
-```{tip}
-While many Python packages can be `import`ed directly, additional pure Python packages can also be loaded by executing the `%pip install <PACKAGE>` magic inside a cell, after which the package can be imported.
+First, clone the this repository using git:
+
+```shell
+git clone https://github.com/climet-eu/compression-lab-notebooks.git
+cd compression-lab-notebooks
 ```
 
-```{note}
-The online laboratory has only been tested in recent Firefox and Chrome browsers. Some features may not (yet) be supported in Safari browsers.
+We provide several example datasets, which are stored in Git Large File Storage. If you have not yet installed `git lfs` on your system, you can find instructions here: <https://git-lfs.com>.
+Afterwards, you can download the datasets with:
+
+```shell
+git lfs install
+git lfs fetch --all
 ```
 
-```{attention}
-The online laboratory runs with the strict memory constraints of your web browser. It is therefore recommended to only open and execute one or two notebooks at a time. When a notebook is closed, the kernel will automatically shutdown to preserve resources.
+We use the `uv` Python package manager. If you have not yet installed `uv` on your system, you can find instructions here: <https://docs.astral.sh/uv/getting-started/installation/>.
+Afterwards, you can create a fresh virtual environment and install all dependencies using:
 
-If the online lab runs out of memory, you can save your work, close the notebook, and try to restart it. If you are still running low on memory, you should first download a copy of your notebooks, then reload the notebook page, re-upload the notebook, and continue working on them.
-
-If you intend on executing memory intensive workloads, it is best to continue working on the notebooks locally instead. The online laboratory is primarily designed for initial exploration and for sharing codes in a reproducible environment.
+```shell
+uv sync
 ```
 
-```{caution}
-In the online laboratory, changes to notebooks and local files are only saved in your web browser's storage and not persisted to disk.
+Finally, you can run Jupyter Lab using:
 
-Please download copies of any files that you don't want to loose.
-
-Your files from an old session will usually be kept if you close or refresh this page, unless your browser's storage for `lab.climet.eu` is cleared, e.g.
-- manually by clearing the browser's site data
-- automatically when too much data is stored
-- automatically when you close a private browsing context
-- if you have setup your browser to clear site data, e.g. when the browser is closed
+```shell
+uv run jupyter lab
 ```
+
+### (b) Setup-free Online Laboratory
+
+Alternatively, you can open the notebooks in the [Online Laboratory for Climate Science and Meteorology](https://docs.climet.eu/lab/) at <https://compression.lab.climet.eu/> and get started right away.
+
+Please note that compression in the Online Laboratory currently only works in recent Firefox and Chrome browsers.
+
+```{warning} Warning: JupyterLite may not work in every web browser
+<div style="background-color:var(--tw-prose-invert-body)">
+<img src="https://baseline.js.org/features/wasm-multi-memory/static-adaptive.svg" alt="Baseline Status: Multi-memory (WebAssembly)"/>
+</div>
+```
+
+
+## Glossary
+
+**Bit Pattern**
+: The bits that make up a number, e.g. the 32 bits for a single-precision floating-point number.
+
+**Codec**
+: An algorithm that transforms the data from one representation to another (encoding) and back (decoding).
+
+**Compression**
+: Reducing the number of bits needed to store some data.
+
+**Compressor**
+: A codec that implements compression and decompression.
+
+**Filter**
+: A codec that transforms the data to make it more easily compressible without necessarily reducing its byte size directly itself.
+
+**IEEE 754 Floating Point Number**
+: A number with dynamic precision $(-1)^{s} \cdot 2^{e-b} \cdot 1.m\ldots$ that is represented by its sign $s$, its binary exponent $e$ with bias $b$, and a mantissa $m\ldots$ that encodes the binary fractional multiplier.
+
+**Lossless Compression**
+: Compression that reproduces the original bits exactly during decompression.
+
+**Lossy Compression**
+: Compression that may only produce an approximation of the original data during decompression.
+
+**Meta-Compressor**
+: A compressor that wraps one or more other compressors and transforms the data they work with. Meta-compressors can be used to combine multiple compressors or to provide extra functionality on top of existing compressors.
 
 
 ## Overview of the provided notebooks
 
-The **Online Laboratory for ESiWACE3 Data compression hackathon** comes with several Jupyter notebook examples to
+The **Online Laboratory for Data Compression in Climate Science and Meteorology** comes with several Jupyter notebook examples to
 
-1. introduce you to its functionality
-2. showcase different compression methods on various weather and climate datasets
-3. allow you to easily and quickly test out compression on *your* data
+1. showcase different compression methods on various weather and climate example datasets
+2. allow you to easily and quickly test out compression on *your* data
 
 The following is an overview of all notebooks:
 
 - [`01-compression.ipynb`](01-compression.ipynb): Introduction to compression with `numcodecs`
 - [`02-datasets/`](02-datasets/README.md): Example datasets and access via an S3 bucket
-  - [`01-preprocessed.ipynb`](02-datasets/01-preprocessed.ipynb): preprocessed example dataset subsets for quick testing
+  - [`01-preprocessed.ipynb`](02-datasets/01-preprocessed.ipynb): Preprocessed example dataset subsets for quick testing
   - [`02-hplp.ipynb`](02-datasets/02-hplp.ipynb): hplp-experiment dataset
   - [`03-OpenIFS.ipynb`](02-datasets/03-OpenIFS.ipynb): OpenIFS dataset
   - [`04-NextGEMS.ipynb`](02-datasets/04-NextGEMS.ipynb): NextGEMS dataset
   - [`05-ICONXPP.ipynb`](02-datasets/05-ICONXPP.ipynb): ICON-XPP dataset
 - [`03-compressors/`](03-compressors/README.md): Overview of popular compressors
-  - [`01-bit-round.ipynb`](03-compressors/01-bit-round.ipynb): bit rounding
+  - [`01-bit-round.ipynb`](03-compressors/01-bit-round.ipynb): Bit rounding
   - [`02-zfp.ipynb`](03-compressors/02-zfp.ipynb): ZFP
   - [`03-sperr.ipynb`](03-compressors/03-sperr.ipynb): SPERR
   - [`04-ebcc.ipynb`](03-compressors/04-ebcc.ipynb): EBCC
@@ -73,12 +112,13 @@ The following is an overview of all notebooks:
   - [`01-nan-missing-values.ipynb`](04-challenges/01-nan-missing-values.ipynb): NaN missing values
   - [`02-relative-error-bound.ipynb`](04-challenges/02-relative-error-bound.ipynb): Pointwise relative error bound
   - [`03-spatial-gradient.ipynb`](04-challenges/03-spatial-gradient.ipynb): Spatial gradient value along the longitude axis
-- [`05-appendices/`](05-appendices/README.md)
-  - [`01-data-sources/`](05-appendices/01-data-sources/README.md): Examples on opening datasets from different sources
-    - [`01-local.ipynb`](05-appendices/01-data-sources/01-local.ipynb): open a large local read-only dataset
-    - [`02-remote.ipynb`](05-appendices/01-data-sources/02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
-    - [`03-cdsapi.ipynb`](05-appendices/01-data-sources/03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
-    - [`04-ecmwfapi.ipynb`](05-appendices/01-data-sources/04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
+- `05-appendices/`
+  - [`01-data-sources/`](05-appendices/01-data-sources/README.md): Opening datasets from different sources
+    - [`01-local.ipynb`](05-appendices/01-data-sources/01-local.ipynb): Open a large local read-only dataset
+    - [`02-remote.ipynb`](05-appendices/01-data-sources/02-remote.ipynb): Open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
+    - [`03-cdsapi.ipynb`](05-appendices/01-data-sources/03-cdsapi.ipynb): Download small datasets from the Climate Data Store using the `cdsapi`
+    - [`04-ecmwfapi.ipynb`](05-appendices/01-data-sources/04-ecmwfapi.ipynb): Download small datasets from the ECMWF Archive using the `ecmwfapi`
+
 
 ## Getting Help and Contributing
 
@@ -88,6 +128,10 @@ This laboratory is being developed at https://github.com/climet-eu/lab and https
 ## License
 
 Licensed under the CC BY 4.0 license ([LICENSE](LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
+
+This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.
+
+The example datasets in the `data/` folder are licensed separately, please see the `LICENSE.txt` files in the respective subfolders.
 
 
 ## Funding

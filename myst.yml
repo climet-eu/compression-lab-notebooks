@@ -33,16 +33,16 @@ project:
     - file: README.md
     - file: 01-compression.ipynb
     - title: Example Datasets
+      file: 02-datasets/README.md  
       children:
-        - file: 02-datasets/README.md
         - file: 02-datasets/01-preprocessed.ipynb  
         - file: 02-datasets/02-hplp.ipynb
         - file: 02-datasets/03-OpenIFS.ipynb
         - file: 02-datasets/04-NextGEMS.ipynb
         - file: 02-datasets/05-ICONXPP.ipynb
     - title: Compressor Overviews
+      file: 03-compressors/README.md  
       children:
-        - file: 03-compressors/README.md
         - file: 03-compressors/01-bit-round.ipynb
         - file: 03-compressors/02-zfp.ipynb
         - file: 03-compressors/03-sperr.ipynb
@@ -53,16 +53,16 @@ project:
         - file: 03-compressors/08-safeguards.ipynb
         - file: 03-compressors/09-random-projection.ipynb
     - title: Compression Challenges
+      file: 04-challenges/README.md
       children:
         - file: 04-challenges/01-nan-missing-values.ipynb
         - file: 04-challenges/02-relative-error-bound.ipynb
         - file: 04-challenges/03-spatial-gradient.ipynb
     - title: Appendices
       children:
-        - file: 05-appendices/README.md
         - title: "Appendix A: Data Sources"
+          file: 05-appendices/01-data-sources/README.md  
           children:
-            - file: 05-appendices/01-data-sources/README.md
             - file: 05-appendices/01-data-sources/01-local.ipynb
             - file: 05-appendices/01-data-sources/02-remote.ipynb
             - file: 05-appendices/01-data-sources/03-cdsapi.ipynb

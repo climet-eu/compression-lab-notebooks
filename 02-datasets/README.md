@@ -1,11 +1,11 @@
 # Example datasets
 
-The **Online Laboratory for Data Compression in Climate Science and Meteorology** is built so you can explore various data compression approaches on different datasets. Some example datasets are provided for exploration in the [s3://esiwacebucket](https://object-store.os-api.cci1.ecmwf.int/esiwacebucket) S3 bucket. The following notebooks introduce the datasets and how to access them.
+The **Online Laboratory for Data Compression in Climate Science and Meteorology** is built so you can explore various data compression approaches on different datasets. Some example datasets are provided for exploration in the [s3://esiwacebucket](https://object-store.os-api.cci1.ecmwf.int/esiwacebucket) S3 bucket. The following notebooks introduce these datasets and how to access them.
 
 
 ## Overview of the provided notebooks
 
-- [`01-preprocessed.ipynb`](01-preprocessed.ipynb): preprocessed example dataset subsets for quick testing
+- [`01-preprocessed.ipynb`](01-preprocessed.ipynb): Preprocessed example dataset subsets for quick testing
 - [`02-hplp.ipynb`](02-hplp.ipynb): hplp-experiment dataset
 - [`03-OpenIFS.ipynb`](03-OpenIFS.ipynb): OpenIFS dataset
 - [`04-NextGEMS.ipynb`](04-NextGEMS.ipynb): NextGEMS dataset
@@ -15,3 +15,5 @@ The **Online Laboratory for Data Compression in Climate Science and Meteorology*
 ## License
 
 Licensed under the CC BY 4.0 license ([LICENSE](../LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
+
+The example datasets in the `../data/` folder are licensed separately, please see the `LICENSE.txt` files in the respective subfolders.

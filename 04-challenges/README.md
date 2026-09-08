@@ -1,13 +1,13 @@
-# Example challenges of applying data compression
+# Compression Challenges
 
-The **Online Laboratory for ESiWACE3 Data compression hackathon** proposes some pre-made challenges to explore and familiarise yourself with different data problems encountered in atmospheric science. The following notebooks provide several walkthroughs for different challenges to introduce you to complexity inherent to some datastypes.
+The **Online Laboratory for Data Compression in Climate Science and Meteorology** proposes some pre-made challenges to explore and familiarise yourself with different data problems encountered in atmospheric science and to try to find a compression setup that achieves the highest compression ratio. We host compression ratio [leaderboards](https://github.com/climet-eu/compression-lab-notebooks/issues/46) for each of the challenges, where you are encouraged to submit your own entries.
 
 
 ## Overview of the provided notebooks
 
-- [`01-nan-challenge.ipynb`](01-nan-challenge.ipynb): Introduction to the nan values compression challenge
-- [`02-eb-rel-challenge.ipynb`](02-eb-rel-challenge.ipynb): Introduction to the pointwise compression challenge, here you will be introduce on how to preserve the pointwise relative error bound on precipitation data
-- [`03-gradient.ipynb`](03-gradient.ipynb): Introduction about the gradient compression challenge, here you will be introduce to preserve gradient value along the longitude
+- [`01-nan-challenge.ipynb`](01-nan-challenge.ipynb): NaN missing values
+- [`02-eb-rel-challenge.ipynb`](02-eb-rel-challenge.ipynb): Pointwise relative error bound
+- [`03-gradient.ipynb`](03-gradient.ipynb): Spatial gradient value along the longitude axis
 
 
 ## License
