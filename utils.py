@@ -42,6 +42,24 @@ def open_dataset(path: Path, **kwargs) -> "xarray.Dataset":
     return ds
 
 
+def open_remote_dataset(url: str, *, engine="h5netcdf", **kwargs) -> "xarray.Dataset":
+    import xarray as xr
+    from ipyfilite.http import HTTPFileIO
+
+    url = str(url)
+
+    if "chunks" not in kwargs:
+        kwargs["chunks"] = "auto"
+
+    if "cache" not in kwargs:
+        kwargs["cache"] = False
+
+    ds = xr.open_dataset(HTTPFileIO(url, Path(url).name), **kwargs)
+    ds.attrs["path"] = url
+
+    return ds
+
+
 async def mount_user_local_file() -> Path:
     import ipyfilite
 

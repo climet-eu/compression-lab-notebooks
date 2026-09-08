@@ -18,14 +18,6 @@ git clone https://github.com/climet-eu/compression-lab-notebooks.git
 cd compression-lab-notebooks
 ```
 
-We provide several example datasets, which are stored in Git Large File Storage. If you have not yet installed `git lfs` on your system, you can find instructions here: <https://git-lfs.com>.
-Afterwards, you can download the datasets with:
-
-```shell
-git lfs install
-git lfs fetch --all
-```
-
 We use the `uv` Python package manager. If you have not yet installed `uv` on your system, you can find instructions here: <https://docs.astral.sh/uv/getting-started/installation/>.
 Afterwards, you can create a fresh virtual environment and install all dependencies using:
 

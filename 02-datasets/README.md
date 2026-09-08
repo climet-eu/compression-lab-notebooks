@@ -15,5 +15,3 @@ The **Online Laboratory for Data Compression in Climate Science and Meteorology*
 ## License
 
 Licensed under the CC BY 4.0 license ([LICENSE](../LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
-
-The example datasets in the `../data/` folder are licensed separately, please see the `LICENSE.txt` files in the respective subfolders.
