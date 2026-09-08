@@ -1,6 +1,0 @@
-# GRIB dataset files and their index files
-/*.grib
-/*.grib.*.idx
-
-# NetCDF dataset files
-/*.nc
