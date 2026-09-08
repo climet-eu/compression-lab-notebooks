@@ -123,8 +123,6 @@ Licensed under the CC BY 4.0 license ([LICENSE](LICENSE.txt) or https://creative
 
 This product includes software produced by UChicago Argonne, LLC under Contract No. DE-AC02-06CH11357 with the Department of Energy.
 
-The example datasets in the `data/` folder are licensed separately, please see the `LICENSE.txt` files in the respective subfolders.
-
 
 ## Funding
 
