@@ -32,7 +32,7 @@ jobs:
         run: uv sync --group book
 
       - name: Build HTML Assets
-        run: uv run jupyter-book build --html
+        run: uv run jupyter-book build --html --check-links
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

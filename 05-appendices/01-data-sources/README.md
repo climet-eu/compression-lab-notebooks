@@ -5,7 +5,7 @@ The **Online Laboratory for ESiWACE3 Data compression hackathon** is built so yo
 
 ## Overview of the provided notebooks
 
-- [`01-local.ipynb`](01-local.ipynb): open a large local read-only dataset by mounting it into the online lab
+- [`01-local.ipynb`](01-local.ipynb): open a large local read-only dataset
 - [`02-remote.ipynb`](02-remote.ipynb): open large remote datasets using `fsspec`, `kerchunk`, and `zarr`
 - [`03-cdsapi.ipynb`](03-cdsapi.ipynb): download small datasets from the Climate Data Store using the `cdsapi`
 - [`04-ecmwfapi.ipynb`](04-ecmwfapi.ipynb): download small datasets from the ECMWF Archive using the `ecmwfapi`
@@ -13,4 +13,4 @@ The **Online Laboratory for ESiWACE3 Data compression hackathon** is built so yo
 
 ## License
 
-Licensed under the CC BY 4.0 license ([LICENSE](../LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).
+Licensed under the CC BY 4.0 license ([LICENSE](../../LICENSE.txt) or https://creativecommons.org/licenses/by/4.0/).

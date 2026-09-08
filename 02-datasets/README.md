@@ -5,7 +5,7 @@ The **Online Laboratory for Data Compression in Climate Science and Meteorology*
 
 ## Overview of the provided notebooks
 
-- [`01-datasets.ipynb`](01-datasets.ipynb): examples of preprocessed dataset subsets for quick testing
+- [`01-preprocessed.ipynb`](01-preprocessed.ipynb): preprocessed example dataset subsets for quick testing
 - [`02-hplp.ipynb`](02-hplp.ipynb): hplp-experiment dataset
 - [`03-OpenIFS.ipynb`](03-OpenIFS.ipynb): OpenIFS dataset
 - [`04-NextGEMS.ipynb`](04-NextGEMS.ipynb): NextGEMS dataset
