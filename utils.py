@@ -400,6 +400,15 @@ def quickplot(
     import matplotlib.pyplot as plt
     import numpy as np
 
+    def fallback_title():
+        return (
+            da.attrs.get("long_name")
+            or da.attrs.get("name")
+            or da.attrs.get("standard_name")
+            or da.name
+            or "Field"
+        )
+
     if "x" not in kwargs:
         for x in ["lon", "longitude"]:
             if x in da.dims:
@@ -492,7 +501,13 @@ def quickplot(
     chart.coastlines()
     chart.gridlines()
     chart.legend()
-    chart.title(title.format(default_title=chart._default_title_template))
+
+    try:
+        chart.title(title.format(default_title=chart._default_title_template))
+    except TypeError:
+        if title != "{default_title}":
+            raise
+        chart.title(fallback_title())
 
     if cr is not None:
         t = chart.ax.text(

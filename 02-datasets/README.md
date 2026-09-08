@@ -10,6 +10,7 @@ The **Online Laboratory for Data Compression in Climate Science and Meteorology*
 - [`03-OpenIFS.ipynb`](03-OpenIFS.ipynb): OpenIFS dataset
 - [`04-NextGEMS.ipynb`](04-NextGEMS.ipynb): NextGEMS dataset
 - [`05-ICONXPP.ipynb`](05-ICONXPP.ipynb): ICON-XPP dataset
+- [`06-ERA5.ipynb`](06-ERA5.ipynb): ERA5 dataset
 
 
 ## License
