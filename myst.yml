@@ -67,7 +67,7 @@ project:
             - file: 05-appendices/01-data-sources/02-remote.ipynb
             - file: 05-appendices/01-data-sources/03-cdsapi.ipynb
             - file: 05-appendices/01-data-sources/04-ecmwfapi.ipynb
-  #bibliography: .myst/doi.bib
+  bibliography: .myst/doi.bib
 
 site:
   template: book-theme
