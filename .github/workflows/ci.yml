@@ -83,4 +83,4 @@ jobs:
         run: uv sync --group book
 
       - name: Build HTML Assets
-        run: uv run jupyter-book build --check-links
+        run: uv run jupyter-book build --ci --check-links --strict

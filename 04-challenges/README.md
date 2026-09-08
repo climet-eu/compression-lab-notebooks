@@ -5,9 +5,9 @@ The **Online Laboratory for Data Compression in Climate Science and Meteorology*
 
 ## Overview of the provided notebooks
 
-- [`01-nan-challenge.ipynb`](01-nan-challenge.ipynb): NaN missing values
-- [`02-eb-rel-challenge.ipynb`](02-eb-rel-challenge.ipynb): Pointwise relative error bound
-- [`03-gradient.ipynb`](03-gradient.ipynb): Spatial gradient value along the longitude axis
+- [`01-nan-missing-values.ipynb`](01-nan-missing-values.ipynb): NaN missing values
+- [`02-relative-error-bound.ipynb`](02-relative-error-bound.ipynb): Pointwise relative error bound
+- [`03-spatial-gradient.ipynb`](03-spatial-gradient.ipynb): Spatial gradient value along the longitude axis
 
 
 ## License
