@@ -12,6 +12,11 @@
       "name": "Faghih-Naini, Sara",
       "affiliation": "European Centre for Medium-Range Weather Forecasts",
       "orcid": "0009-0009-1880-2822"
+    },
+    {
+      "name": "Bouvier, Clément",
+      "affiliation": "University of Helsinki",
+      "orcid": "0000-0003-2920-7585"
     }
   ],
   "keywords": ["laboratory", "compression", "jupyter-notebooks"],
