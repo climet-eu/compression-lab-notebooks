@@ -1,4 +1,8 @@
+[default]
+extend-ignore-identifiers-re = ["[0-9]ba[0-9]"]
+
 [default.extend-identifiers]
+Apon = "Apon"
 isobaricInhPa = "isobaricInhPa"
 fo = "fo"
 Transfering = "Transfering"
