@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compression-challenge-codecs"
+version = "0.1.0"
+description = "Custom numcodecs codecs used for the compression-lab challenge submissions"
+requires-python = ">=3.11"
+dependencies = ["numpy", "numba", "numcodecs", "scipy"]
+
+[tool.setuptools]
+py-modules = ["ctxcoder", "ctxcodec2", "interpcodec", "gradcodec", "wrappers"]
+
+# numcodecs discovers these automatically: get_codec({"id": "interp-ctx", ...}) works without imports
+[project.entry-points."numcodecs.codecs"]
+"nan-context-mixing" = "ctxcoder:NanContextCodec"
+"ctx-mixing" = "ctxcodec2:CtxCodec"
+"interp-ctx" = "interpcodec:InterpCtxCodec"
+"lon-gradient-difference" = "gradcodec:LonGradientCodec"
+"mask-fill" = "wrappers:MaskFillCodec"
+"clip" = "wrappers:ClipCodec"
+"abs-or-rel-transform" = "wrappers:AbsRelCodec"
+"grid-int" = "wrappers:GridIntCodec"
+"per-slice" = "wrappers:PerSliceCodec"
+"post-lossless" = "wrappers:PostLosslessCodec"
+"threshold-to-zero" = "wrappers:ThresholdCodec"
+"constant-field" = "wrappers:ConstantCodec"

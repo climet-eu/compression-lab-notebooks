@@ -1,0 +1,17 @@
+# cached ERA5 / challenge data (re-creatable with cache_era5.py, ~560 MB)
+data/
+# run logs and scratch lists
+*.log
+redo_*.txt
+__pycache__/
+*.egg-info/
+# Excel lock files
+~$*
+# pipeline outputs / derived artifacts (re-creatable: search.py, alltime.py, finalize.py, fetch_scoreboard.py)
+results/
+results_all/
+submissions/
+scoreboard_best.json
+scoreboard.xlsx
+era5_stats.json
+era5_requirements.txt
