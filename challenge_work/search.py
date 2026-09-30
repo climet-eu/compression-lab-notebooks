@@ -13,7 +13,7 @@ from numcodecs.registry import get_codec
 
 import wrappers  # noqa: F401  (registers wrapper codecs)
 import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
-import numcodecs_context_mixing, numcodecs_eb_quantize  # noqa: F401,E401
+import numcodecs_context_mixing, numcodecs_eb_quantize, numcodecs_mask, numcodecs_replace  # noqa: F401,E401
 import numcodecs_interp_ctx  # noqa: F401
 from reqs import analyse, fast_check
 
@@ -56,14 +56,6 @@ def _zfp_acc(p):
     return {"id": "zfp.rs", "mode": "fixed-accuracy", "tolerance": float(p)}
 
 
-def _ctx_abs(p):
-    return {"id": "ctx-mixing", "eb": _f(p), "mode": "abs"}
-
-
-def _nanctx_abs(p):
-    return {"id": "nan-context-mixing", "eb_abs": float(p)}
-
-
 def _interp_abs(p):
     return {"id": "interp_ctx", "eb": _f(p)}
 
@@ -74,10 +66,6 @@ def _ebq_residuals(p):
 
 def _ebq_symbols(p):
     return {"id": "eb_quantize", "eb": _f(p), "codec": {"id": "context_mixing.symbols"}}
-
-
-def _ctx_rel(p):
-    return {"id": "ctx-mixing", "eb": float(p), "mode": "rel"}
 
 
 def _pwr(inner_fn):
@@ -129,7 +117,15 @@ def wrap(cfg, info, mask_nan, mask_zero, per_slice=False, threshold=None):
     if info.minimum is not None or info.maximum is not None:
         cfg = {"id": "combinators.stack", "codecs": [{"id": "clip", "minimum": info.minimum, "maximum": info.maximum}, cfg]}
     if mask_nan or mask_zero:
-        cfg = {"id": "mask-fill", "inner": cfg, "mask_nan": bool(mask_nan), "mask_zero": bool(mask_zero), "fill": "nearest"}
+        aware = cfg.get("id") in ("eb_quantize", "interp_ctx", "mask.meta") or (
+            cfg.get("id") == "combinators.stack" and cfg["codecs"][-1].get("id") in ("eb_quantize", "interp_ctx")
+        )
+        if mask_nan and not aware:
+            cfg = {"id": "combinators.stack", "codecs": [{"id": "replace.filter", "replacements": {"nan": "finite_mean"}}, cfg]}
+        if mask_zero:
+            cfg = {"id": "mask.meta", "mask": 0.0, "bitmap_codec": {"id": "context_mixing.bitmap"}, "codec": cfg}
+        if mask_nan:
+            cfg = {"id": "mask.meta", "mask": float("nan"), "bitmap_codec": {"id": "context_mixing.bitmap"}, "codec": cfg}
     return cfg
 
 
@@ -224,8 +220,8 @@ def build_families(x, info, reqs, lk):
 
     if info.lossless:
         wk = {"mask_nan": False, "mask_zero": False}
-        return [("grid-int/ctx", lambda p: {"id": "grid_int", "codec": {"id": "ctx-mixing", "eb": 0.5, "mode": "abs", "shrink": 0.0}}, 1.0, wk),
-                ("grid-int/nanctx", lambda p: {"id": "grid_int", "codec": {"id": "nan-context-mixing", "eb_abs": 0.5}}, 1.0, wk)], has_nan, zero_frac
+        return [("grid-int/residuals", lambda p: {"id": "grid_int", "codec": {"id": "context_mixing.residuals"}}, 1.0, wk),
+                ("grid-int/symbols", lambda p: {"id": "grid_int", "codec": {"id": "context_mixing.symbols"}}, 1.0, wk)], has_nan, zero_frac
 
     # error scale p0
     abs_bounds = list(info.max_abs) + [v * rng for v in info.max_range_rel]
@@ -280,59 +276,54 @@ def build_families(x, info, reqs, lk):
         except Exception:
             gscale = None
         if gscale and gscale > 0 and p0_abs < 2 * gscale:
-            def _grid_nanctx(p, gs=gscale):
-                return {"id": "nan-context-mixing", "eb_abs": float(p) * gs / 2 * (1 - 1e-9) if not isinstance(p, str) else p}
+            def _grid_symbols(p, gs=gscale):
+                return {"id": "eb_quantize", "eb": float(p) * gs / 2 * (1 - 1e-9), "codec": {"id": "context_mixing.symbols"}}
 
-            def _grid_ctx(p, gs=gscale):
-                return {"id": "ctx-mixing", "eb": float(p) * gs / 2 * (1 - 1e-9) if not isinstance(p, str) else p, "mode": "abs", "shrink": 0.0}
+            def _grid_residuals(p, gs=gscale):
+                return {"id": "eb_quantize", "eb": float(p) * gs / 2 * (1 - 1e-9), "codec": {"id": "context_mixing.residuals"}}
 
             for mz in zero_variants:
                 sfx = "+zeromask" if mz else ""
-                add("grid-nanctx" + sfx, _grid_nanctx, 1.0, mz)
-                add("grid-ctx" + sfx, _grid_ctx, 1.0, mz)
+                add("grid-symbols" + sfx, _grid_symbols, 1.0, mz)
+                add("grid-residuals" + sfx, _grid_residuals, 1.0, mz)
 
     if not pointwise_only_rel:
         for mz in zero_variants:
             sfx = "+zeromask" if mz else ""
             add("interp-abs" + sfx, _interp_abs, p0_abs, mz)
             add("sperr-pwe" + sfx, _sperr_pwe, p0_abs, mz)
-            add("ctx-abs" + sfx, _ctx_abs, p0_abs, mz)
             add("ebq-residuals" + sfx, _ebq_residuals, p0_abs, mz)
             if rng / (2 * p0_abs) <= 512:
-                add("nanctx-abs" + sfx, _nanctx_abs, p0_abs, mz)
                 add("ebq-symbols" + sfx, _ebq_symbols, p0_abs, mz)
             if info.has_mean and not info.has_pointwise:
                 add("sperr-q" + sfx, _sperr_q, p0_abs, mz)
                 add("sperr-bpp" + sfx, _sperr_bpp, 1.0, mz)
             for frac, thr in thresholds:
                 add(f"interp-abs+thr{frac}" + sfx, _interp_abs, p0_abs, mz, threshold=thr)
-                add(f"ctx-abs+thr{frac}" + sfx, _ctx_abs, p0_abs, mz, threshold=thr)
+                add(f"ebq-residuals+thr{frac}" + sfx, _ebq_residuals, p0_abs, mz, threshold=thr)
                 if info.has_mean and not info.has_pointwise:
                     add(f"sperr-q+thr{frac}" + sfx, _sperr_q, p0_abs, mz, threshold=thr)
 
     if info.max_rel:
         p0_rel = max(info.max_rel)
-        add("ctx-rel", _ctx_rel, p0_rel, False)
         add("pwratio-ebq-residuals", _pwr(_ebq_residuals), p0_rel, False)
         add("pwratio-interp", _pwr(_interp_abs), p0_rel, False)
         add("pwratio-sperr", _pwr(_sperr_pwe), p0_rel, False)
     elif info.mean_rel and not info.has_pointwise:
         # log-domain / abs-or-rel coding tuned to the mean-relative budget
         p0_rel = 2.0 * max(info.mean_rel)
-        add("ctx-rel", _ctx_rel, p0_rel, False)
         add("pwratio-interp", _pwr(_interp_abs), p0_rel, False)
         for frac, thr in thresholds:
-            add(f"ctx-rel+thr{frac}", _ctx_rel, p0_rel, False, threshold=thr)
             add(f"pwratio-interp+thr{frac}", _pwr(_interp_abs), p0_rel, False, threshold=thr)
         a = max(info.mean_rel) * mean_abs_x
         r = max(info.mean_rel)
         add("absrel-interp", _absrel(_interp_abs, a, r), 1.0, need_zero_exact)
-        add("absrel-ctx", _absrel(_ctx_abs, a, r), 1.0, need_zero_exact)
+        add("absrel-ebq", _absrel(_ebq_residuals, a, r), 1.0, need_zero_exact)
         add("absrel-sperr", _absrel(_sperr_pwe, a, r), 1.0, need_zero_exact)
     for a, r in info.abs_or_rel:
         add("absrel-interp", _absrel(_interp_abs, a, r), 1.0, False)
         add("absrel-sperr", _absrel(_sperr_pwe, a, r), 1.0, False)
-        add("absrel-ctx", _absrel(_ctx_abs, a, r), 1.0, False)
+        add("absrel-ebq", _absrel(_ebq_residuals, a, r), 1.0, False)
     return fams, has_nan, zero_frac
 
 

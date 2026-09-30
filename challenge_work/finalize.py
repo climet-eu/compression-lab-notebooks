@@ -24,9 +24,14 @@ import numcodecs_clip  # noqa: F401
 import numcodecs_context_mixing  # noqa: F401
 import numcodecs_eb_quantize  # noqa: F401
 import numcodecs_grid_int  # noqa: F401
+import numcodecs_mask  # noqa: F401
+import numcodecs_pw_ratio  # noqa: F401
+import numcodecs_replace  # noqa: F401
 import wrappers  # noqa: F401
-from ctxcodec2 import CtxCodec
-from ctxcoder import NanContextCodec
+from numcodecs_context_mixing import ContextMixingBitmapCodec, ContextMixingResidualCodec, ContextMixingSymbolCodec
+from numcodecs_eb_quantize import ErrorBoundedQuantizeCodec
+from numcodecs_mask import MaskMetaCodec
+from numcodecs_pw_ratio import PointwiseRatioErrorBoundedCodec
 from numcodecs_lon_gradient import LongitudeGradientCodec
 
 HERE = Path(__file__).parent
@@ -34,7 +39,7 @@ OUT = HERE / "submissions"
 OUT.mkdir(exist_ok=True)
 AUTHOR = "@SF-N"
 REC_VERSION = "0.1.0a2"
-NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient) + compression-lab-notebooks/challenge_work (ctxcoder.py, ctxcodec2.py, wrappers.py)"
+NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient), juntyr/numcodecs-mask (PR #4), numcodecs-pw-ratio + compression-lab-notebooks/challenge_work/wrappers.py (abs-or-rel, threshold, constant)"
 
 SMALL_HEADER = [
     "Author",
@@ -87,11 +92,8 @@ def config_str(codec):
 
 # id -> (module, class); nested "inner"/"lossless" configs become nested constructor calls
 CLASSES = {
-    "nan-context-mixing": ("ctxcoder", "NanContextCodec"),
-    "ctx-mixing": ("ctxcodec2", "CtxCodec"),
     "interp_ctx": ("numcodecs_interp_ctx", "InterpolationContextMixingCodec"),
     "lon_gradient": ("numcodecs_lon_gradient", "LongitudeGradientCodec"),
-    "mask-fill": ("wrappers", "MaskFillCodec"),
     "clip": ("numcodecs_clip", "ClipCodec"),
     "abs-or-rel-transform": ("wrappers", "AbsRelCodec"),
     "grid_int": ("numcodecs_grid_int", "GridIntCodec"),
@@ -118,6 +120,13 @@ def explicit_code(config):
     """Fully explicit Python: imports + nested constructor calls for `config`."""
     imports = set()
 
+    def literal(v):
+        if isinstance(v, float) and v != v:
+            return 'float("nan")'
+        if isinstance(v, float) and v in (float("inf"), float("-inf")):
+            return 'float("inf")' if v > 0 else 'float("-inf")'
+        return repr(v)
+
     def expr(cfg, indent):
         cid = cfg["id"]
         mod, cls = CLASSES[cid]
@@ -134,7 +143,9 @@ def explicit_code(config):
             if isinstance(v, dict) and "id" in v and not (cid in ("pw_ratio", "lon_gradient") and k in ("log_codec", "codec")):
                 args.append(f"{pad}    {k}={expr(v, indent + 4)},")
             else:
-                args.append(f"{pad}    {k}={v!r},")
+                args.append(f"{pad}    {k}={literal(v)},")
+        if not args:
+            return f"{cls}()"
         return f"{cls}(\n" + "\n".join(args) + f"\n{pad})"
 
     body = expr(config, 0)
@@ -162,14 +173,18 @@ def run_nan():
 
     ds = xr.open_dataset(HERE / "data/HOAPS_2020-08_6-hourly.nc", engine="h5netcdf", decode_timedelta=True)
     da = ds["wvpa"].sel(time=slice("2020-08-01", "2020-08-07"))
-    codec = NanContextCodec(eb_abs=1.0, lr_mask=0.005, lim_mask=1 / 512, lr_val=0.004, lim_val=1 / 256)
-    direct = "from ctxcoder import NanContextCodec\n\ncodec = NanContextCodec(eb_abs=1.0, lr_mask=0.005, lim_mask=1 / 512, lr_val=0.004, lim_val=1 / 256)"
+    codec = MaskMetaCodec(
+        mask=float("nan"),
+        bitmap_codec=ContextMixingBitmapCodec(mixer_rate=0.005),
+        codec=ErrorBoundedQuantizeCodec(codec=ContextMixingSymbolCodec(), eb=1.0),
+    )
+    direct = None
     e, d, te, td = timed_roundtrip(codec, da.values)
     da_dec = da.copy(data=d)
     violations = float(np.mean(xr.where(np.isnan(da), ~np.isnan(da_dec), ~(np.abs(da_dec - da) <= 1))))
     cr = da.nbytes / np.array(e).nbytes
     return dict(cr=cr, violations=violations, te=te, td=td, nbytes=da.nbytes, codec=codec, direct=direct,
-                short="Context-mixing arithmetic coder (uniform quantisation eb=1, NaN mask + value contexts)")
+                short="mask.meta(NaN, bitmap=context_mixing.bitmap) + eb_quantize(eb=1) + context_mixing.symbols")
 
 
 def run_pwrel():
@@ -177,14 +192,19 @@ def run_pwrel():
 
     ds = xr.open_dataset(HERE / "data/hplp_sfc_regridded_tp_025deg_steps_228_240.nc", engine="h5netcdf", decode_timedelta=True)
     da = ds["tp"]
-    codec = CtxCodec(eb=0.01, mode="rel", lr_val=0.003)
-    direct = "from ctxcodec2 import CtxCodec\n\ncodec = CtxCodec(eb=0.01, mode=\"rel\", lr_val=0.003)"
+    codec = PointwiseRatioErrorBoundedCodec(
+        eb_ratio=1.01,
+        eb_abs_marker="$eb_abs",
+        log_codec={"id": "eb_quantize", "eb": "$eb_abs", "codec": {"id": "context_mixing.residuals", "mixer_rate": 0.003}},
+        sign_codec={"id": "zstd.rs", "level": 19},
+    )
+    direct = None
     e, d, te, td = timed_roundtrip(codec, da.values)
     da_dec = da.copy(data=d)
     violations = float(np.mean(~(np.abs(da_dec - da) <= (np.abs(da) * 0.01))))
     cr = da.nbytes / np.array(e).nbytes
     return dict(cr=cr, violations=violations, te=te, td=td, nbytes=da.nbytes, codec=codec, direct=direct,
-                short="Log-domain quantisation (1% ratio) + zero mask + context-mixing residual coder")
+                short="pw_ratio(1.01) + eb_quantize + context_mixing.residuals")
 
 
 def run_gradient():
