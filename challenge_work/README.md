@@ -15,26 +15,21 @@ Everything in this directory is self-contained and runs inside the repository's
 | external | `replace.threshold` ([numcodecs-replace](https://github.com/juntyr/numcodecs-replace), `ThresholdFilterCodec` PR), `zero` with `value` ([numcodecs-zero](https://github.com/juntyr/numcodecs-zero), PR) | dropping negligible values under a mean error budget; (near-)constant reconstructions for very loose requirements. |
 | external | `mask.meta` ([numcodecs-mask](https://github.com/juntyr/numcodecs-mask), with the mask-aware codec protocol of [PR #4](https://github.com/juntyr/numcodecs-mask/pull/4)) | masks NaNs / zeros; `eb_quantize`, `interp_ctx` and the context-mixing coders implement the protocol and skip masked values entirely. |
 
-## Reproduction
+## Validating submissions (proposed workflow)
 
-Only the code is versioned; data, per-variable results and the Excel files are outputs
-(ignored by git) and are regenerated with:
+The Google Sheet is the open submission form. `validate_submissions.py` pulls it, instantiates
+every entry whose "Configuration" is a machine-readable numcodecs configuration (registered codecs
+only, no code execution), compresses the challenge data, checks the safety requirement exactly as
+the notebooks do, recomputes the ratio and renders one Markdown leaderboard per challenge with
+validated entries only (top 10 visible, the rest in a `<details>` block) for the GitHub issues:
 
 ```bash
-python cache_era5.py                 # cache ERA5 variables (default timestep) as data/era5/*.npz
-python fetch_scoreboard.py           # previous best per variable from the Google Sheet -> scoreboard_best.json
-python search.py single 6            # per-variable search (results/*.json), several hours
-python search.py pressure 2
-python finalize.py 4                 # official re-verification + timing -> submissions/*.xlsx (also NaN/PwRel/Gradient)
-# optional: all-timestep evaluation of single variables, each timestep compressed independently
-python alltime.py pressure 1 u && python official_all.py pressure u 5 && python add_alltime_rows.py && python update_alltime_notes.py
+python validate_submissions.py --sheets NaN,PwRel,Gradient,ERA5-Pressure,ERA5-Single --out leaderboards.md
 ```
 
-The three small challenges read their datasets from `data/` (downloaded from the ESiWACE bucket
-as in the notebooks); `cache_era5.py` does not fetch those, see `finalize.py` for the file names.
+## Search pipeline
 
-`search.py` tries codec families (SPERR pwe/q/bpp, `interp_ctx`,
-`eb_quantize` + `context_mixing.*`, pw_ratio log-domain variants, abs-or-rel transform, thresholding of
-negligible values for mean bounds, zero/NaN masks, clipping, LZMA post-compression), bisects
-the error parameter against a fast mirror of `compression_requirement_checks`, and finally
-verifies the winner with the official checker.
+The scripts that search for codec configurations and build the Excel submission files
+(`search.py`, `finalize.py`, `alltime.py`, ...) live in the private repository
+[SF-N/compression-challenge-search](https://github.com/SF-N/compression-challenge-search);
+`era5.py` (ERA5 reference loading, copied from the challenge notebooks) is shared.
