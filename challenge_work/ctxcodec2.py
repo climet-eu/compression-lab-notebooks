@@ -423,6 +423,8 @@ class CtxCodec(Codec):
                 # cannot distinguish NaN from zero in a single mask; encoder
                 # guarantees this case does not occur for challenge data
                 pass
+        if np.issubdtype(dtype, np.integer):
+            vals = np.rint(vals)
         result = vals.reshape(shape).astype(dtype)
         if out is not None:
             out[...] = result

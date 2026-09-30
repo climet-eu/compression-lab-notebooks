@@ -81,13 +81,16 @@ def run_variable(lk, v):
         m = c.get("meta", {})
         if m.get("family") in fam_by_name and (m["family"], m["p"]) not in [(a, b) for a, b, _ in cands]:
             cands.append((m["family"], m["p"], None))
-    post = res["config"].get("id") == "post-lossless" and res["config"].get("lossless")
+    cfg0 = res["config"]
+    post = None
+    if cfg0.get("id") == "combinators.stack" and len(cfg0["codecs"]) == 2 and cfg0["codecs"][1].get("id") in ("lzma", "zstd.rs"):
+        post = cfg0["codecs"][1]
 
     def cfg_for(fam, p):
         make, wk = fam_by_name[fam]
         cfg = wrap(make(p), info, **wk)
         if post:
-            cfg = {"id": "post-lossless", "inner": cfg, "lossless": post}
+            cfg = {"id": "combinators.stack", "codecs": [cfg, post]}
         return cfg
 
     ds = load_era5_data(leveltype=lk, param=v)

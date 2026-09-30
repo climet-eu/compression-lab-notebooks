@@ -1,4 +1,8 @@
-"""Wrapper codecs used by the ERA5 challenge submissions."""
+"""Wrapper codecs used by the ERA5 challenge submissions.
+
+Clipping, chunking, integer-grid coding and lossless post-compression are
+provided by numcodecs-clip, numcodecs-chunked, numcodecs-grid-int and
+numcodecs-combinators (CodecStack)."""
 
 import struct
 
@@ -147,34 +151,6 @@ class MaskFillCodec(Codec):
         return x
 
 
-class ClipCodec(Codec):
-    """Clip decoded values into [minimum, maximum]."""
-
-    codec_id = "clip"
-
-    def __init__(self, inner, minimum=None, maximum=None):
-        self.inner = _cfg(inner)
-        self.minimum = minimum
-        self.maximum = maximum
-
-    def encode(self, buf):
-        x = np.ascontiguousarray(buf)
-        return b"CLP1" + _pack_shape_dtype(x.shape, x.dtype) + bytes(get_codec(self.inner).encode(x))
-
-    def decode(self, buf, out=None):
-        buf = memoryview(buf).tobytes()
-        assert buf[:4] == b"CLP1"
-        shape, dtype, off = _unpack_shape_dtype(buf, 4)
-        x = np.asarray(_dec(self.inner, buf[off:])).reshape(shape).astype(dtype)
-        lo = -np.inf if self.minimum is None else self.minimum
-        hi = np.inf if self.maximum is None else self.maximum
-        np.clip(x, lo, hi, out=x)
-        if out is not None:
-            out[...] = x
-            return out
-        return x
-
-
 class AbsRelCodec(Codec):
     """
     Transform for a pointwise "abs OR rel" error bound.  y = f(x) with
@@ -219,118 +195,6 @@ class AbsRelCodec(Codec):
         shape, dtype, off = _unpack_shape_dtype(buf, 4)
         y = np.asarray(_dec(self.inner, buf[off:]), dtype=np.float64).reshape(shape)
         x = self._inv(y).astype(dtype)
-        if out is not None:
-            out[...] = x
-            return out
-        return x
-
-
-class GridIntCodec(Codec):
-    """
-    Lossless codec for data lying exactly on a uniform grid offset + k*scale
-    (e.g. GRIB-packed data).  The integers k are coded with the inner codec
-    (as float64 with absolute error bound < 0.5); the reconstruction
-    offset + k*scale must be bitwise exact, which the encoder verifies.
-    """
-
-    codec_id = "grid-int"
-
-    def __init__(self, inner):
-        self.inner = _cfg(inner)
-
-    @staticmethod
-    def detect(x):
-        fin = x[np.isfinite(x)]
-        u = np.unique(fin)
-        if len(u) < 2:
-            return float(u[0]) if len(u) else 0.0, 1.0
-        d = np.diff(u)
-        scale = float(d.min())
-        # refine: gcd-like check
-        ratios = d / scale
-        if not np.allclose(ratios, np.rint(ratios), rtol=0, atol=1e-6):
-            raise ValueError("data not on a uniform grid")
-        return float(u[0]), scale
-
-    def encode(self, buf):
-        x = np.ascontiguousarray(buf)
-        xf = x.astype(np.float64)
-        offset, scale = self.detect(xf)
-        k = np.rint((xf - offset) / scale)
-        rec = (offset + k * scale).astype(x.dtype)
-        fin = np.isfinite(xf)
-        if not np.array_equal(rec[fin].view(np.uint64) if x.dtype == np.float64 else rec[fin], x[fin].view(np.uint64) if x.dtype == np.float64 else x[fin]):
-            raise ValueError("grid reconstruction is not bitwise exact")
-        k = np.where(fin, k, np.nan)
-        header = b"GRD1" + _pack_shape_dtype(x.shape, x.dtype) + struct.pack("<dd", offset, scale)
-        return header + bytes(get_codec(self.inner).encode(k))
-
-    def decode(self, buf, out=None):
-        buf = memoryview(buf).tobytes()
-        assert buf[:4] == b"GRD1"
-        shape, dtype, off = _unpack_shape_dtype(buf, 4)
-        offset, scale = struct.unpack("<dd", buf[off:off + 16])
-        off += 16
-        k = np.asarray(_dec(self.inner, buf[off:]), dtype=np.float64).reshape(shape)
-        x = (offset + np.rint(k) * scale).astype(dtype)
-        x[np.isnan(k)] = np.nan
-        if out is not None:
-            out[...] = x
-            return out
-        return x
-
-
-class PerSliceCodec(Codec):
-    """Encode each leading-axis slice independently with the inner codec."""
-
-    codec_id = "per-slice"
-
-    def __init__(self, inner):
-        self.inner = _cfg(inner)
-
-    def encode(self, buf):
-        x = np.ascontiguousarray(buf)
-        parts = [bytes(get_codec(self.inner).encode(x[i])) for i in range(x.shape[0])]
-        header = b"SLC1" + _pack_shape_dtype(x.shape, x.dtype) + struct.pack("<%dq" % len(parts), *[len(p) for p in parts])
-        return header + b"".join(parts)
-
-    def decode(self, buf, out=None):
-        buf = memoryview(buf).tobytes()
-        assert buf[:4] == b"SLC1"
-        shape, dtype, off = _unpack_shape_dtype(buf, 4)
-        n = shape[0]
-        lens = struct.unpack("<%dq" % n, buf[off:off + 8 * n])
-        off += 8 * n
-        x = np.empty(shape, dtype)
-        for i, ln in enumerate(lens):
-            x[i] = np.asarray(_dec(self.inner, buf[off:off + ln])).reshape(shape[1:]).astype(dtype)
-            off += ln
-        if out is not None:
-            out[...] = x
-            return out
-        return x
-
-
-class PostLosslessCodec(Codec):
-    """Apply a lossless byte codec (e.g. LZMA) to the inner codec's output."""
-
-    codec_id = "post-lossless"
-
-    def __init__(self, inner, lossless):
-        self.inner = _cfg(inner)
-        self.lossless = _cfg(lossless)
-
-    def encode(self, buf):
-        x = np.ascontiguousarray(buf)
-        e = bytes(get_codec(self.inner).encode(x))
-        return b"PLL1" + _pack_shape_dtype(x.shape, x.dtype) + bytes(get_codec(self.lossless).encode(np.frombuffer(e, np.uint8)))
-
-    def decode(self, buf, out=None):
-        buf = memoryview(buf).tobytes()
-        assert buf[:4] == b"PLL1"
-        shape, dtype, off = _unpack_shape_dtype(buf, 4)
-        e = bytes(_dec(self.lossless, buf[off:]))
-        x = np.asarray(_dec(self.inner, e)).reshape(shape).astype(dtype)
         if out is not None:
             out[...] = x
             return out
@@ -393,5 +257,5 @@ class ConstantCodec(Codec):
         return x
 
 
-for _c in (MaskFillCodec, ClipCodec, AbsRelCodec, GridIntCodec, PerSliceCodec, PostLosslessCodec, ConstantCodec, ThresholdCodec):
+for _c in (MaskFillCodec, AbsRelCodec, ConstantCodec, ThresholdCodec):
     register_codec(_c)

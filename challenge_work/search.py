@@ -12,6 +12,7 @@ import numpy as np
 from numcodecs.registry import get_codec
 
 import wrappers  # noqa: F401  (registers wrapper codecs)
+import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
 import interpcodec  # noqa: F401  (registers interp-ctx)
 from reqs import analyse, fast_check
 
@@ -113,11 +114,11 @@ def _sz3_psnr(rng):
 
 def wrap(cfg, info, mask_nan, mask_zero, per_slice=False, threshold=None):
     if per_slice:
-        cfg = {"id": "per-slice", "inner": cfg}
+        cfg = {"id": "chunked", "codec": cfg, "chunk_shape": [1, "..."]}
     if threshold is not None:
         cfg = {"id": "threshold-to-zero", "inner": cfg, "threshold": float(threshold)}
     if info.minimum is not None or info.maximum is not None:
-        cfg = {"id": "clip", "inner": cfg, "minimum": info.minimum, "maximum": info.maximum}
+        cfg = {"id": "combinators.stack", "codecs": [{"id": "clip", "minimum": info.minimum, "maximum": info.maximum}, cfg]}
     if mask_nan or mask_zero:
         cfg = {"id": "mask-fill", "inner": cfg, "mask_nan": bool(mask_nan), "mask_zero": bool(mask_zero), "fill": "nearest"}
     return cfg
@@ -214,8 +215,8 @@ def build_families(x, info, reqs, lk):
 
     if info.lossless:
         wk = {"mask_nan": False, "mask_zero": False}
-        return [("grid-int/ctx", lambda p: {"id": "grid-int", "inner": {"id": "ctx-mixing", "eb": 0.5, "mode": "abs", "shrink": 0.0}}, 1.0, wk),
-                ("grid-int/nanctx", lambda p: {"id": "grid-int", "inner": {"id": "nan-context-mixing", "eb_abs": 0.5}}, 1.0, wk)], has_nan, zero_frac
+        return [("grid-int/ctx", lambda p: {"id": "grid_int", "codec": {"id": "ctx-mixing", "eb": 0.5, "mode": "abs", "shrink": 0.0}}, 1.0, wk),
+                ("grid-int/nanctx", lambda p: {"id": "grid_int", "codec": {"id": "nan-context-mixing", "eb_abs": 0.5}}, 1.0, wk)], has_nan, zero_frac
 
     # error scale p0
     abs_bounds = list(info.max_abs) + [v * rng for v in info.max_range_rel]
@@ -426,7 +427,7 @@ def run_variable(lk, v, force=False):
         if short.startswith("Constant"):
             continue
         for lcfg, lname in post_opts:
-            pcfg = {"id": "post-lossless", "inner": cfg, "lossless": lcfg}
+            pcfg = {"id": "combinators.stack", "codecs": [cfg, lcfg]}
             try:
                 ok, psize, _ = evaluate(pcfg, x, reqs)
             except Exception:

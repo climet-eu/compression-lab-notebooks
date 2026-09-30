@@ -327,6 +327,8 @@ class InterpCtxCodec(Codec):
         Y, X = shape[-2], shape[-1]
         rec = np.zeros((T, Y, X), np.float64)
         _code_all(rec, rec, T, Y, X, w, levels, np.zeros(1, np.uint8), inp, False, lr, lim)
+        if np.issubdtype(dtype, np.integer):
+            rec = np.rint(rec)
         result = rec.reshape(shape).astype(dtype)
         if out is not None:
             out[...] = result

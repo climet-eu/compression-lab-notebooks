@@ -496,6 +496,8 @@ class NanContextCodec(Codec):
         m, q = _decode_all(inp, T, Y, X, nbits, lr_m, lim_m, lr_v, lim_v)
         vals = xmin + step * q.astype(np.float64)
         vals[m == 1] = np.nan
+        if np.issubdtype(dtype, np.integer):
+            vals = np.rint(vals)
         result = vals.reshape(shape).astype(dtype)
         if out is not None:
             out[...] = result

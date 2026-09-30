@@ -11,13 +11,16 @@ Everything in this directory is self-contained and runs inside the repository's
 | `ctxcodec2.py` | `CtxCodec` / `ctx-mixing` | prediction residuals (MED / previous-slice predictor, adaptively selected) coded with context mixing; `mode="abs"` (absolute bound) or `mode="rel"` (log-domain, pointwise relative bound, exact zeros, sign plane). |
 | `interpcodec.py` | `InterpCtxCodec` / `interp-ctx` | SZ3-style coarse-to-fine cubic/linear interpolation prediction (in-loop quantisation, `|x-x_dec|<=eb`) + context-mixing coder. Best for smooth fields at low bitrates. |
 | `gradcodec.py` | `LonGradientCodec` / `lon-gradient-difference` | for the spatial-gradient challenge: compresses the stride-10 longitude differences (the exact quantity that is bounded) with a 2x wider step, integrates along residue classes, closure-aware rounding + ramp. |
-| `wrappers.py` | `mask-fill`, `clip`, `abs-or-rel-transform`, `grid-int`, `per-slice`, `post-lossless`, `threshold-to-zero`, `constant-field` | wrappers used by the ERA5 submissions (NaN/zero masks coded with the context-mixing mask coder, clipping to data limits, transform for "abs OR rel" bounds, exact lossless integer-grid coding, ...). |
+| `wrappers.py` | `mask-fill`, `abs-or-rel-transform`, `threshold-to-zero`, `constant-field` | remaining wrappers used by the ERA5 submissions (NaN/zero masks coded with the context-mixing mask coder, transform for "abs OR rel" bounds, dropping negligible values, constant fields). |
+| external | `clip` ([numcodecs-clip](https://github.com/SF-N/numcodecs-clip)), `chunked` ([numcodecs-chunked](https://github.com/SF-N/numcodecs-chunked)), `grid_int` ([numcodecs-grid-int](https://github.com/SF-N/numcodecs-grid-int)), `combinators.stack` (numcodecs-combinators) | clipping to data limits, per-chunk encoding, bitwise-lossless integer-grid coding, lossless post-compression. |
 
 The custom codec ids are only known to numcodecs once this package is installed (it registers
 them as `numcodecs.codecs` entry points):
 
 ```bash
 uv pip install -e ./challenge_work      # from the repository root; re-run after `uv sync`
+# plus the separately published codecs (until they are on PyPI, install from their repos):
+uv pip install -e ../numcodecs-clip -e ../numcodecs-chunked -e ../numcodecs-grid-int
 ```
 
 Afterwards `numcodecs.registry.get_codec(config)` works for every "Configuration" string in the

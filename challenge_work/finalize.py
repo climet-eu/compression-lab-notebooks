@@ -19,6 +19,9 @@ from openpyxl.styles import Font
 
 import gradcodec  # noqa: F401
 import interpcodec  # noqa: F401
+import numcodecs_chunked  # noqa: F401
+import numcodecs_clip  # noqa: F401
+import numcodecs_grid_int  # noqa: F401
 import wrappers  # noqa: F401
 from ctxcodec2 import CtxCodec
 from ctxcoder import NanContextCodec
@@ -87,11 +90,11 @@ CLASSES = {
     "interp-ctx": ("interpcodec", "InterpCtxCodec"),
     "lon-gradient-difference": ("gradcodec", "LonGradientCodec"),
     "mask-fill": ("wrappers", "MaskFillCodec"),
-    "clip": ("wrappers", "ClipCodec"),
+    "clip": ("numcodecs_clip", "ClipCodec"),
     "abs-or-rel-transform": ("wrappers", "AbsRelCodec"),
-    "grid-int": ("wrappers", "GridIntCodec"),
-    "per-slice": ("wrappers", "PerSliceCodec"),
-    "post-lossless": ("wrappers", "PostLosslessCodec"),
+    "grid_int": ("numcodecs_grid_int", "GridIntCodec"),
+    "chunked": ("numcodecs_chunked", "ChunkedCodec"),
+    "combinators.stack": ("numcodecs_combinators.stack", "CodecStack"),
     "threshold-to-zero": ("wrappers", "ThresholdCodec"),
     "constant-field": ("wrappers", "ConstantCodec"),
     "sperr.rs": ("numcodecs_wasm_sperr", "Sperr"),
@@ -113,6 +116,10 @@ def explicit_code(config):
         imports.add(f"from {mod} import {cls}")
         pad = " " * indent
         args = []
+        if cid == "combinators.stack":
+            for v in cfg["codecs"]:
+                args.append(f"{pad}    {expr(v, indent + 4)},")
+            return f"{cls}(\n" + "\n".join(args) + f"\n{pad})"
         for k, v in cfg.items():
             if k in ("id", "_version"):
                 continue
@@ -123,13 +130,7 @@ def explicit_code(config):
         return f"{cls}(\n" + "\n".join(args) + f"\n{pad})"
 
     body = expr(config, 0)
-    header = (
-        "# custom codecs live in compression-lab-notebooks/challenge_work; either\n"
-        "#   uv pip install -e ../challenge_work   (registers them as numcodecs entry points), or\n"
-        "#   import sys; sys.path.insert(0, '../challenge_work')\n"
-        "# (they need numba: uv pip install numba)\n"
-    )
-    return header + "\n".join(sorted(imports)) + "\n\ncodec = " + body
+    return "\n".join(sorted(imports)) + "\n\ncodec = " + body
 
 
 PREAMBLE = (
