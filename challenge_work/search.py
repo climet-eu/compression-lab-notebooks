@@ -11,9 +11,8 @@ from pathlib import Path
 import numpy as np
 from numcodecs.registry import get_codec
 
-import wrappers  # noqa: F401  (registers wrapper codecs)
 import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
-import numcodecs_abs_or_rel, numcodecs_context_mixing, numcodecs_eb_quantize, numcodecs_mask, numcodecs_replace  # noqa: F401,E401
+import numcodecs_abs_or_rel, numcodecs_context_mixing, numcodecs_eb_quantize, numcodecs_mask, numcodecs_replace, numcodecs_zero  # noqa: F401,E401
 import numcodecs_interp_ctx  # noqa: F401
 from reqs import analyse, fast_check
 
@@ -111,7 +110,7 @@ def wrap(cfg, info, mask_nan, mask_zero, per_slice=False, threshold=None):
     if per_slice:
         cfg = {"id": "chunked", "codec": cfg, "chunk_shape": [1, "..."]}
     if threshold is not None:
-        cfg = {"id": "threshold-to-zero", "inner": cfg, "threshold": float(threshold)}
+        cfg = {"id": "combinators.stack", "codecs": [{"id": "replace.threshold", "threshold": float(threshold), "replacement": 0}, cfg]}
     if info.minimum is not None or info.maximum is not None:
         cfg = {"id": "combinators.stack", "codecs": [{"id": "clip", "minimum": info.minimum, "maximum": info.maximum}, cfg]}
     if mask_nan or mask_zero:
@@ -269,7 +268,7 @@ def build_families(x, info, reqs, lk):
     # lossless -> also try it (and coarser multiples) for mean bounds
     if info.has_mean and not info.has_pointwise:
         try:
-            from wrappers import GridIntCodec
+            from numcodecs_grid_int import GridIntCodec
             _off, gscale = GridIntCodec.detect(x)
         except Exception:
             gscale = None
@@ -328,7 +327,7 @@ def build_families(x, info, reqs, lk):
 def config_short(name, wk, post):
     parts = []
     if wk.get("threshold") is not None:
-        parts.append(f"Threshold({wk['threshold']:.3g})")
+        parts.append(f"replace.threshold({wk['threshold']:.3g})")
     if wk.get("mask_nan") or wk.get("mask_zero"):
         m = []
         if wk.get("mask_nan"):
@@ -368,7 +367,9 @@ def run_variable(lk, v, force=False):
     # constant field candidate
     fin = x[np.isfinite(x)]
     for val in {float(np.median(fin)), float(fin.mean())} if fin.size else set():
-        cfg = {"id": "constant-field", "value": val}
+        cfg = {"id": "zero", "value": val}
+        if has_nan:
+            cfg = {"id": "mask.meta", "mask": float("nan"), "bitmap_codec": {"id": "context_mixing.bitmap"}, "codec": cfg}
         try:
             ok, size, _ = evaluate(cfg, x, reqs)
         except Exception:

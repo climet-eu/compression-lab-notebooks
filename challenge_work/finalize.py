@@ -28,7 +28,7 @@ import numcodecs_grid_int  # noqa: F401
 import numcodecs_mask  # noqa: F401
 import numcodecs_pw_ratio  # noqa: F401
 import numcodecs_replace  # noqa: F401
-import wrappers  # noqa: F401
+import numcodecs_zero  # noqa: F401
 from numcodecs_context_mixing import ContextMixingBitmapCodec, ContextMixingResidualCodec, ContextMixingSymbolCodec
 from numcodecs_eb_quantize import ErrorBoundedQuantizeCodec
 from numcodecs_mask import MaskMetaCodec
@@ -40,7 +40,7 @@ OUT = HERE / "submissions"
 OUT.mkdir(exist_ok=True)
 AUTHOR = "@SF-N"
 REC_VERSION = "0.1.0a2"
-NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient, abs-or-rel), juntyr/numcodecs-mask (PR #4), numcodecs-pw-ratio + compression-lab-notebooks/challenge_work/wrappers.py (threshold, constant)"
+NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient, abs-or-rel), juntyr/numcodecs-mask (PR #4), numcodecs-replace (ThresholdFilterCodec PR), numcodecs-zero (value PR), numcodecs-pw-ratio"
 
 SMALL_HEADER = [
     "Author",
@@ -106,8 +106,8 @@ CLASSES = {
     "context_mixing.residuals": ("numcodecs_context_mixing", "ContextMixingResidualCodec"),
     "mask.meta": ("numcodecs_mask", "MaskMetaCodec"),
     "replace.filter": ("numcodecs_replace", "ReplaceFilterCodec"),
-    "threshold-to-zero": ("wrappers", "ThresholdCodec"),
-    "constant-field": ("wrappers", "ConstantCodec"),
+    "replace.threshold": ("numcodecs_replace", "ThresholdFilterCodec"),
+    "zero": ("numcodecs_zero", "ZeroCodec"),
     "sperr.rs": ("numcodecs_wasm_sperr", "Sperr"),
     "sz3.rs": ("numcodecs_wasm_sz3", "Sz3"),
     "zfp.rs": ("numcodecs_wasm_zfp", "Zfp"),
@@ -153,12 +153,6 @@ def explicit_code(config):
     return "\n".join(sorted(imports)) + "\n\ncodec = " + body
 
 
-PREAMBLE = (
-    "import sys\n"
-    "sys.path.insert(0, \"../challenge_work\")  # custom codecs (needs: uv pip install numba)\n"
-    "import wrappers  # noqa: F401  registers the remaining custom codec ids\n"
-    "from numcodecs.registry import get_codec\n\n"
-)
 
 
 def codec_code(codec, direct=None):

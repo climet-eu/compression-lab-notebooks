@@ -21,7 +21,6 @@ from pathlib import Path
 
 import numpy as np
 
-import wrappers  # noqa: F401
 import numcodecs_interp_ctx  # noqa: F401
 from era5 import load_era5_data
 from reqs import analyse, fast_check
