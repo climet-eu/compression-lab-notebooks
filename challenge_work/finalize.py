@@ -21,6 +21,8 @@ import gradcodec  # noqa: F401
 import interpcodec  # noqa: F401
 import numcodecs_chunked  # noqa: F401
 import numcodecs_clip  # noqa: F401
+import numcodecs_context_mixing  # noqa: F401
+import numcodecs_eb_quantize  # noqa: F401
 import numcodecs_grid_int  # noqa: F401
 import wrappers  # noqa: F401
 from ctxcodec2 import CtxCodec
@@ -95,6 +97,12 @@ CLASSES = {
     "grid_int": ("numcodecs_grid_int", "GridIntCodec"),
     "chunked": ("numcodecs_chunked", "ChunkedCodec"),
     "combinators.stack": ("numcodecs_combinators.stack", "CodecStack"),
+    "eb_quantize": ("numcodecs_eb_quantize", "ErrorBoundedQuantizeCodec"),
+    "context_mixing.bitmap": ("numcodecs_context_mixing", "ContextMixingBitmapCodec"),
+    "context_mixing.symbols": ("numcodecs_context_mixing", "ContextMixingSymbolCodec"),
+    "context_mixing.residuals": ("numcodecs_context_mixing", "ContextMixingResidualCodec"),
+    "mask.meta": ("numcodecs_mask", "MaskMetaCodec"),
+    "replace.filter": ("numcodecs_replace", "ReplaceFilterCodec"),
     "threshold-to-zero": ("wrappers", "ThresholdCodec"),
     "constant-field": ("wrappers", "ConstantCodec"),
     "sperr.rs": ("numcodecs_wasm_sperr", "Sperr"),
@@ -123,7 +131,7 @@ def explicit_code(config):
         for k, v in cfg.items():
             if k in ("id", "_version"):
                 continue
-            if isinstance(v, dict) and "id" in v and cid != "pw_ratio":
+            if isinstance(v, dict) and "id" in v and not (cid == "pw_ratio" and k == "log_codec"):
                 args.append(f"{pad}    {k}={expr(v, indent + 4)},")
             else:
                 args.append(f"{pad}    {k}={v!r},")

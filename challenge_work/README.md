@@ -13,6 +13,13 @@ Everything in this directory is self-contained and runs inside the repository's
 | `gradcodec.py` | `LonGradientCodec` / `lon-gradient-difference` | for the spatial-gradient challenge: compresses the stride-10 longitude differences (the exact quantity that is bounded) with a 2x wider step, integrates along residue classes, closure-aware rounding + ramp. |
 | `wrappers.py` | `mask-fill`, `abs-or-rel-transform`, `threshold-to-zero`, `constant-field` | remaining wrappers used by the ERA5 submissions (NaN/zero masks coded with the context-mixing mask coder, transform for "abs OR rel" bounds, dropping negligible values, constant fields). |
 | external | `clip` ([numcodecs-clip](https://github.com/SF-N/numcodecs-clip)), `chunked` ([numcodecs-chunked](https://github.com/SF-N/numcodecs-chunked)), `grid_int` ([numcodecs-grid-int](https://github.com/SF-N/numcodecs-grid-int)), `combinators.stack` (numcodecs-combinators) | clipping to data limits, per-chunk encoding, bitwise-lossless integer-grid coding, lossless post-compression. |
+| external | `eb_quantize` ([numcodecs-eb-quantize](https://github.com/SF-N/numcodecs-eb-quantize)), `context_mixing.bitmap` / `.symbols` / `.residuals` ([numcodecs-context-mixing](https://github.com/SF-N/numcodecs-context-mixing)) | the modular form of `ctx-mixing` / `nan-context-mixing`: error-bounded linear quantisation to integer indices + context-mixing entropy coding of the indices; combined with `pw_ratio` (relative bounds) and `mask.meta` / `replace.filter` (missing values). |
+
+The monolithic `ctx-mixing` and `nan-context-mixing` codecs are kept because `mask.meta` cannot
+yet tell the inner codec which positions are masked: the modular composition codes the filled
+missing values too (identical ratios where there are no masks, -1% for log-domain coding via
+`pw_ratio`, but -13% for the 69%-NaN missing-values challenge). A mask-aware codec protocol for
+`numcodecs-mask` is planned.
 
 The custom codec ids are only known to numcodecs once this package is installed (it registers
 them as `numcodecs.codecs` entry points):
@@ -20,7 +27,8 @@ them as `numcodecs.codecs` entry points):
 ```bash
 uv pip install -e ./challenge_work      # from the repository root; re-run after `uv sync`
 # plus the separately published codecs (until they are on PyPI, install from their repos):
-uv pip install -e ../numcodecs-clip -e ../numcodecs-chunked -e ../numcodecs-grid-int
+uv pip install -e ../numcodecs-clip -e ../numcodecs-chunked -e ../numcodecs-grid-int \
+               -e ../numcodecs-eb-quantize -e ../numcodecs-context-mixing
 ```
 
 Afterwards `numcodecs.registry.get_codec(config)` works for every "Configuration" string in the
@@ -48,7 +56,7 @@ The three small challenges read their datasets from `data/` (downloaded from the
 as in the notebooks); `cache_era5.py` does not fetch those, see `finalize.py` for the file names.
 
 `search.py` tries codec families (SPERR pwe/q/bpp, `interp-ctx`, `ctx-mixing`,
-`nan-context-mixing`, pw_ratio log-domain variants, abs-or-rel transform, thresholding of
+`nan-context-mixing`, `eb_quantize` + `context_mixing.*`, pw_ratio log-domain variants, abs-or-rel transform, thresholding of
 negligible values for mean bounds, zero/NaN masks, clipping, LZMA post-compression), bisects
 the error parameter against a fast mirror of `compression_requirement_checks`, and finally
 verifies the winner with the official checker.

@@ -13,6 +13,7 @@ from numcodecs.registry import get_codec
 
 import wrappers  # noqa: F401  (registers wrapper codecs)
 import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
+import numcodecs_context_mixing, numcodecs_eb_quantize  # noqa: F401,E401
 import interpcodec  # noqa: F401  (registers interp-ctx)
 from reqs import analyse, fast_check
 
@@ -65,6 +66,14 @@ def _nanctx_abs(p):
 
 def _interp_abs(p):
     return {"id": "interp-ctx", "eb": _f(p)}
+
+
+def _ebq_residuals(p):
+    return {"id": "eb_quantize", "eb": _f(p), "codec": {"id": "context_mixing.residuals"}}
+
+
+def _ebq_symbols(p):
+    return {"id": "eb_quantize", "eb": _f(p), "codec": {"id": "context_mixing.symbols"}}
 
 
 def _ctx_rel(p):
@@ -288,8 +297,10 @@ def build_families(x, info, reqs, lk):
             add("interp-abs" + sfx, _interp_abs, p0_abs, mz)
             add("sperr-pwe" + sfx, _sperr_pwe, p0_abs, mz)
             add("ctx-abs" + sfx, _ctx_abs, p0_abs, mz)
+            add("ebq-residuals" + sfx, _ebq_residuals, p0_abs, mz)
             if rng / (2 * p0_abs) <= 512:
                 add("nanctx-abs" + sfx, _nanctx_abs, p0_abs, mz)
+                add("ebq-symbols" + sfx, _ebq_symbols, p0_abs, mz)
             if info.has_mean and not info.has_pointwise:
                 add("sperr-q" + sfx, _sperr_q, p0_abs, mz)
                 add("sperr-bpp" + sfx, _sperr_bpp, 1.0, mz)
@@ -302,6 +313,7 @@ def build_families(x, info, reqs, lk):
     if info.max_rel:
         p0_rel = max(info.max_rel)
         add("ctx-rel", _ctx_rel, p0_rel, False)
+        add("pwratio-ebq-residuals", _pwr(_ebq_residuals), p0_rel, False)
         add("pwratio-interp", _pwr(_interp_abs), p0_rel, False)
         add("pwratio-sperr", _pwr(_sperr_pwe), p0_rel, False)
     elif info.mean_rel and not info.has_pointwise:
