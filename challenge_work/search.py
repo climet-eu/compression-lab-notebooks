@@ -13,7 +13,7 @@ from numcodecs.registry import get_codec
 
 import wrappers  # noqa: F401  (registers wrapper codecs)
 import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
-import numcodecs_context_mixing, numcodecs_eb_quantize, numcodecs_mask, numcodecs_replace  # noqa: F401,E401
+import numcodecs_abs_or_rel, numcodecs_context_mixing, numcodecs_eb_quantize, numcodecs_mask, numcodecs_replace  # noqa: F401,E401
 import numcodecs_interp_ctx  # noqa: F401
 from reqs import analyse, fast_check
 
@@ -84,9 +84,7 @@ def _pwr(inner_fn):
 
 def _absrel(inner_fn, a, r):
     def make(p):
-        eb_abs, eb_rel = a * p, r * p
-        eb_y = math.log1p(eb_rel) / eb_rel * (1.0 - 1e-9)
-        return {"id": "abs-or-rel-transform", "eb_abs": eb_abs, "eb_rel": eb_rel, "inner": inner_fn(eb_y)}
+        return {"id": "abs_or_rel", "eb_abs": a * p, "eb_rel": r * p, "codec": inner_fn("$eb_abs"), "eb_abs_marker": "$eb_abs"}
 
     return make
 

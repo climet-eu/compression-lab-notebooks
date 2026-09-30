@@ -23,6 +23,7 @@ import numcodecs_chunked  # noqa: F401
 import numcodecs_clip  # noqa: F401
 import numcodecs_context_mixing  # noqa: F401
 import numcodecs_eb_quantize  # noqa: F401
+import numcodecs_abs_or_rel  # noqa: F401
 import numcodecs_grid_int  # noqa: F401
 import numcodecs_mask  # noqa: F401
 import numcodecs_pw_ratio  # noqa: F401
@@ -39,7 +40,7 @@ OUT = HERE / "submissions"
 OUT.mkdir(exist_ok=True)
 AUTHOR = "@SF-N"
 REC_VERSION = "0.1.0a2"
-NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient), juntyr/numcodecs-mask (PR #4), numcodecs-pw-ratio + compression-lab-notebooks/challenge_work/wrappers.py (abs-or-rel, threshold, constant)"
+NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient, abs-or-rel), juntyr/numcodecs-mask (PR #4), numcodecs-pw-ratio + compression-lab-notebooks/challenge_work/wrappers.py (threshold, constant)"
 
 SMALL_HEADER = [
     "Author",
@@ -95,7 +96,7 @@ CLASSES = {
     "interp_ctx": ("numcodecs_interp_ctx", "InterpolationContextMixingCodec"),
     "lon_gradient": ("numcodecs_lon_gradient", "LongitudeGradientCodec"),
     "clip": ("numcodecs_clip", "ClipCodec"),
-    "abs-or-rel-transform": ("wrappers", "AbsRelCodec"),
+    "abs_or_rel": ("numcodecs_abs_or_rel", "AbsOrRelErrorBoundedCodec"),
     "grid_int": ("numcodecs_grid_int", "GridIntCodec"),
     "chunked": ("numcodecs_chunked", "ChunkedCodec"),
     "combinators.stack": ("numcodecs_combinators.stack", "CodecStack"),
@@ -140,7 +141,7 @@ def explicit_code(config):
         for k, v in cfg.items():
             if k in ("id", "_version"):
                 continue
-            if isinstance(v, dict) and "id" in v and not (cid in ("pw_ratio", "lon_gradient") and k in ("log_codec", "codec")):
+            if isinstance(v, dict) and "id" in v and not (cid in ("pw_ratio", "lon_gradient", "abs_or_rel") and k in ("log_codec", "codec")):
                 args.append(f"{pad}    {k}={expr(v, indent + 4)},")
             else:
                 args.append(f"{pad}    {k}={literal(v)},")

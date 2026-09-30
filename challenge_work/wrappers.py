@@ -1,5 +1,5 @@
 """Remaining wrapper codecs used by the ERA5 challenge submissions (to be
-replaced by numcodecs-abs-or-rel, numcodecs-replace and numcodecs-zero).
+replaced by numcodecs-replace and numcodecs-zero).
 
 Clipping, chunking, integer-grid coding, lossless post-compression, masking and
 the entropy coders are provided by numcodecs-clip, numcodecs-chunked,
@@ -55,56 +55,6 @@ def _unused_nearest_fill(x, mask):
         idx = ndimage.distance_transform_edt(m3[t], return_distances=False, return_indices=True)
         x3[t] = x3[t][tuple(idx)]
     return x
-
-
-class AbsRelCodec(Codec):
-    """
-    Transform for a pointwise "abs OR rel" error bound.  y = f(x) with
-    f'(x) = 1 / max(eb_abs, eb_rel*|x|); an inner codec with absolute error
-    bound ln(1+eb_rel)/eb_rel on y guarantees |x_dec - x| <= max(eb_abs, eb_rel*|x|).
-    """
-
-    codec_id = "abs-or-rel-transform"
-
-    def __init__(self, inner, eb_abs, eb_rel):
-        self.inner = _cfg(inner)
-        self.eb_abs = float(eb_abs)
-        self.eb_rel = float(eb_rel)
-
-    @property
-    def eb_y(self):
-        return np.log1p(self.eb_rel) / self.eb_rel
-
-    def _fwd(self, x):
-        a, r = self.eb_abs, self.eb_rel
-        x0 = a / r
-        ax = np.abs(x)
-        y = np.where(ax <= x0, ax / a, x0 / a + np.log(np.maximum(ax, x0) / x0) / r)
-        return np.sign(x) * y
-
-    def _inv(self, y):
-        a, r = self.eb_abs, self.eb_rel
-        x0 = a / r
-        y0 = x0 / a
-        ay = np.abs(y)
-        x = np.where(ay <= y0, ay * a, x0 * np.exp((np.maximum(ay, y0) - y0) * r))
-        return np.sign(y) * x
-
-    def encode(self, buf):
-        x = np.ascontiguousarray(buf)
-        y = self._fwd(x.astype(np.float64))
-        return b"ABR1" + _pack_shape_dtype(x.shape, x.dtype) + bytes(get_codec(self.inner).encode(y))
-
-    def decode(self, buf, out=None):
-        buf = memoryview(buf).tobytes()
-        assert buf[:4] == b"ABR1"
-        shape, dtype, off = _unpack_shape_dtype(buf, 4)
-        y = np.asarray(_dec(self.inner, buf[off:]), dtype=np.float64).reshape(shape)
-        x = self._inv(y).astype(dtype)
-        if out is not None:
-            out[...] = x
-            return out
-        return x
 
 
 class ThresholdCodec(Codec):
@@ -163,5 +113,5 @@ class ConstantCodec(Codec):
         return x
 
 
-for _c in (AbsRelCodec, ConstantCodec, ThresholdCodec):
+for _c in (ConstantCodec, ThresholdCodec):
     register_codec(_c)

@@ -7,7 +7,8 @@ Everything in this directory is self-contained and runs inside the repository's
 
 | module | class / id | idea |
 |---|---|---|
-| `wrappers.py` | `abs-or-rel-transform`, `threshold-to-zero`, `constant-field` | remaining wrappers used by the ERA5 submissions (transform for "abs OR rel" bounds, dropping negligible values, constant fields); to be replaced by numcodecs-abs-or-rel, numcodecs-replace and numcodecs-zero. |
+| `wrappers.py` | `threshold-to-zero`, `constant-field` | remaining wrappers used by the ERA5 submissions (dropping negligible values, constant fields); to be replaced by numcodecs-replace and numcodecs-zero. |
+| external | `abs_or_rel` ([numcodecs-abs-or-rel](https://github.com/SF-N/numcodecs-abs-or-rel)) | pointwise "abs OR rel" error bound via a linear/log transform with encode-time verification (pv, w and single-level variables with such requirements). |
 | external | `clip` ([numcodecs-clip](https://github.com/SF-N/numcodecs-clip)), `chunked` ([numcodecs-chunked](https://github.com/SF-N/numcodecs-chunked)), `grid_int` ([numcodecs-grid-int](https://github.com/SF-N/numcodecs-grid-int)), `combinators.stack` (numcodecs-combinators) | clipping to data limits, per-chunk encoding, bitwise-lossless integer-grid coding, lossless post-compression. |
 | external | `interp_ctx` ([numcodecs-interp-ctx](https://github.com/SF-N/numcodecs-interp-ctx)) | SZ3-style coarse-to-fine interpolation prediction with in-loop quantisation + context mixing; best for smooth fields at low bitrates (u, v, t, z, ...). |
 | external | `lon_gradient` ([numcodecs-lon-gradient](https://github.com/SF-N/numcodecs-lon-gradient)) | spatial-gradient challenge: bounds the longitude derivative by compressing the stride-10 differences (2x wider step) with an inner abs-error codec, integrates along residue classes with closure-aware rounding. |
