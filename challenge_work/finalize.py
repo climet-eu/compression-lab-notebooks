@@ -17,8 +17,8 @@ import openpyxl
 from numcodecs.registry import get_codec
 from openpyxl.styles import Font
 
-import gradcodec  # noqa: F401
-import interpcodec  # noqa: F401
+import numcodecs_interp_ctx  # noqa: F401
+import numcodecs_lon_gradient  # noqa: F401
 import numcodecs_chunked  # noqa: F401
 import numcodecs_clip  # noqa: F401
 import numcodecs_context_mixing  # noqa: F401
@@ -27,14 +27,14 @@ import numcodecs_grid_int  # noqa: F401
 import wrappers  # noqa: F401
 from ctxcodec2 import CtxCodec
 from ctxcoder import NanContextCodec
-from gradcodec import LonGradientCodec
+from numcodecs_lon_gradient import LongitudeGradientCodec
 
 HERE = Path(__file__).parent
 OUT = HERE / "submissions"
 OUT.mkdir(exist_ok=True)
 AUTHOR = "@SF-N"
 REC_VERSION = "0.1.0a2"
-NOTE = "custom codecs in compression-lab-notebooks/challenge_work (ctxcoder.py, ctxcodec2.py, interpcodec.py, gradcodec.py, wrappers.py)"
+NOTE = "codecs: SF-N/numcodecs-* packages (clip, chunked, grid-int, eb-quantize, context-mixing, interp-ctx, lon-gradient) + compression-lab-notebooks/challenge_work (ctxcoder.py, ctxcodec2.py, wrappers.py)"
 
 SMALL_HEADER = [
     "Author",
@@ -89,8 +89,8 @@ def config_str(codec):
 CLASSES = {
     "nan-context-mixing": ("ctxcoder", "NanContextCodec"),
     "ctx-mixing": ("ctxcodec2", "CtxCodec"),
-    "interp-ctx": ("interpcodec", "InterpCtxCodec"),
-    "lon-gradient-difference": ("gradcodec", "LonGradientCodec"),
+    "interp_ctx": ("numcodecs_interp_ctx", "InterpolationContextMixingCodec"),
+    "lon_gradient": ("numcodecs_lon_gradient", "LongitudeGradientCodec"),
     "mask-fill": ("wrappers", "MaskFillCodec"),
     "clip": ("numcodecs_clip", "ClipCodec"),
     "abs-or-rel-transform": ("wrappers", "AbsRelCodec"),
@@ -131,7 +131,7 @@ def explicit_code(config):
         for k, v in cfg.items():
             if k in ("id", "_version"):
                 continue
-            if isinstance(v, dict) and "id" in v and not (cid == "pw_ratio" and k == "log_codec"):
+            if isinstance(v, dict) and "id" in v and not (cid in ("pw_ratio", "lon_gradient") and k in ("log_codec", "codec")):
                 args.append(f"{pad}    {k}={expr(v, indent + 4)},")
             else:
                 args.append(f"{pad}    {k}={v!r},")
@@ -144,7 +144,7 @@ def explicit_code(config):
 PREAMBLE = (
     "import sys\n"
     "sys.path.insert(0, \"../challenge_work\")  # custom codecs (needs: uv pip install numba)\n"
-    "import wrappers, interpcodec, gradcodec  # noqa: F401  registers the custom codec ids\n"
+    "import wrappers  # noqa: F401  registers the remaining custom codec ids\n"
     "from numcodecs.registry import get_codec\n\n"
 )
 
@@ -192,8 +192,11 @@ def run_gradient():
 
     ds = xr.open_dataset(HERE / "data/NextGEMS_regridded_hus_025deg_steps_44_45.nc", engine="h5netcdf", decode_timedelta=True)
     da = ds["hus"]
-    codec = LonGradientCodec(eb_qoi=1e-6, dl=0.25, offset=5, delta=0.02)
-    direct = "from gradcodec import LonGradientCodec\n\ncodec = LonGradientCodec(eb_qoi=1e-6, dl=0.25, offset=5, delta=0.02)"
+    codec = LongitudeGradientCodec(
+        eb=1e-6, spacing=0.25, stencil=5, shrink=0.02,
+        codec={"id": "eb_quantize", "eb": "$eb_abs", "codec": {"id": "context_mixing.residuals"}},
+    )
+    direct = None
     e, d, te, td = timed_roundtrip(codec, da.values)
     da_dec = da.copy(data=d)
 
@@ -203,7 +206,7 @@ def run_gradient():
     violations = float(np.mean(~(np.abs(deriv(da_dec) - deriv(da)) <= 1e-6)))
     cr = da.nbytes / np.array(e).nbytes
     return dict(cr=cr, violations=violations, te=te, td=td, nbytes=da.nbytes, codec=codec, direct=direct,
-                short="Stride-10 longitude differences (eb 2.5e-6) + closure-aware quantisation + context-mixing coder")
+                short="lon_gradient: stride-10 longitude differences (eb 2.5e-6, closure-aware rounding) + eb_quantize + context_mixing.residuals")
 
 
 def write_small(name, r, prev_best):

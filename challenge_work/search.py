@@ -14,7 +14,7 @@ from numcodecs.registry import get_codec
 import wrappers  # noqa: F401  (registers wrapper codecs)
 import numcodecs_chunked, numcodecs_clip, numcodecs_grid_int  # noqa: F401,E401
 import numcodecs_context_mixing, numcodecs_eb_quantize  # noqa: F401,E401
-import interpcodec  # noqa: F401  (registers interp-ctx)
+import numcodecs_interp_ctx  # noqa: F401
 from reqs import analyse, fast_check
 
 HERE = Path(__file__).parent
@@ -65,7 +65,7 @@ def _nanctx_abs(p):
 
 
 def _interp_abs(p):
-    return {"id": "interp-ctx", "eb": _f(p)}
+    return {"id": "interp_ctx", "eb": _f(p)}
 
 
 def _ebq_residuals(p):

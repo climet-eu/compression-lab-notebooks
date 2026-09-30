@@ -7,17 +7,15 @@ name = "compression-challenge-codecs"
 version = "0.1.0"
 description = "Custom numcodecs codecs used for the compression-lab challenge submissions"
 requires-python = ">=3.11"
-dependencies = ["numpy", "numba", "numcodecs", "scipy", "numcodecs-combinators", "numcodecs-clip", "numcodecs-chunked", "numcodecs-grid-int", "numcodecs-eb-quantize", "numcodecs-context-mixing", "numcodecs-mask", "numcodecs-replace", "numcodecs-pw-ratio"]
+dependencies = ["numpy", "numba", "numcodecs", "scipy", "numcodecs-combinators", "numcodecs-clip", "numcodecs-chunked", "numcodecs-grid-int", "numcodecs-eb-quantize", "numcodecs-context-mixing", "numcodecs-interp-ctx", "numcodecs-lon-gradient", "numcodecs-mask", "numcodecs-replace", "numcodecs-pw-ratio"]
 
 [tool.setuptools]
-py-modules = ["ctxcoder", "ctxcodec2", "interpcodec", "gradcodec", "wrappers"]
+py-modules = ["ctxcoder", "ctxcodec2", "wrappers"]
 
 # numcodecs discovers these automatically: get_codec({"id": "interp-ctx", ...}) works without imports
 [project.entry-points."numcodecs.codecs"]
 "nan-context-mixing" = "ctxcoder:NanContextCodec"
 "ctx-mixing" = "ctxcodec2:CtxCodec"
-"interp-ctx" = "interpcodec:InterpCtxCodec"
-"lon-gradient-difference" = "gradcodec:LonGradientCodec"
 "mask-fill" = "wrappers:MaskFillCodec"
 "abs-or-rel-transform" = "wrappers:AbsRelCodec"
 "threshold-to-zero" = "wrappers:ThresholdCodec"

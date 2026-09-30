@@ -18,7 +18,7 @@ OUT = HERE / "results_all"
 def _check(args):
     lk, v, t, cfg = args
     import wrappers  # noqa: F401
-    import interpcodec  # noqa: F401
+    import numcodecs_interp_ctx  # noqa: F401
     from compression_requirement_checks import check_safety_requirements
     from numcodecs.registry import get_codec
     from era5 import load_era5_data
