@@ -17,7 +17,11 @@ table per challenge that
 Usage::
 
     python validate_submissions.py [--sheets NaN,PwRel,Gradient,ERA5-Pressure,ERA5-Single]
-                                   [--limit N] [--out leaderboards.md] [--json validated.json]
+                                   [--limit N] [--timeout seconds] [--out leaderboards.md]
+                                   [--json validated.json]
+
+Each entry is compressed in its own subprocess with a per-entry timeout
+(default 300 s) so that one misbehaving configuration cannot stall the run.
 
 The ERA5 data is read from ``data/era5/<leveltype>__<var>.npz`` (see
 ``cache_era5.py``) or loaded from the remote reference dataset; the three small
@@ -28,6 +32,7 @@ import argparse
 import ast
 import json
 import math
+import multiprocessing
 import time
 import traceback
 import urllib.request
@@ -135,39 +140,85 @@ def roundtrip(codec, values):
     return np.asarray(decoded).reshape(values.shape), values.nbytes / nbytes, t_enc, t_dec
 
 
-def validate_small(challenge: str, rows: list[dict], limit=None) -> list[dict]:
-    da, check = load_small(challenge)
+def _entry_worker(kind: str, key: str, variable: str, config: dict, queue) -> None:
+    """Compress one entry in a subprocess and put the measurements on the queue."""
+    try:
+        if kind == "small":
+            da, check = load_small(key)
+            codec = get_codec(config)
+            decoded, cr, t_enc, t_dec = roundtrip(codec, da.values)
+            da_dec = da.copy(data=decoded.astype(da.dtype) if decoded.dtype != da.dtype else decoded)
+            queue.put({"ratio": cr, "violations": check(da, da_dec), "enc_gbps": da.values.nbytes / t_enc / 1e9, "dec_gbps": da.values.nbytes / t_dec / 1e9})
+        else:
+            from compression_requirement_checks import check_safety_requirements
+
+            try:
+                values = load_era5(key, variable)
+                requirements = era5_requirements(key, variable)
+            except KeyError:
+                queue.put({"error": "no safety requirements available for this variable"})
+                return
+            codec = get_codec(config)
+            decoded, cr, t_enc, t_dec = roundtrip(codec, values)
+            ok = bool(check_safety_requirements(original=values, reconstructed=decoded, requirements=requirements))
+            queue.put({"ratio": cr, "ok": ok, "enc_gbps": values.nbytes / t_enc / 1e9, "dec_gbps": values.nbytes / t_dec / 1e9})
+    except Exception as ex:
+        queue.put({"error": f"failed: {type(ex).__name__}: {str(ex)[:80]}"})
+
+
+def run_entry(kind: str, key: str, variable: str, config: dict, timeout: float) -> dict:
+    """Run one entry in a fresh subprocess with a hard timeout."""
+    ctx = multiprocessing.get_context("spawn")
+    queue = ctx.Queue()
+    proc = ctx.Process(target=_entry_worker, args=(kind, key, variable, config, queue), daemon=True)
+    proc.start()
+    proc.join(timeout)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(5)
+        if proc.is_alive():
+            proc.kill()
+            proc.join()
+        return {"error": f"failed: timed out after {timeout:.0f} s"}
+    try:
+        return queue.get(timeout=10)
+    except Exception:
+        return {"error": f"failed: worker exited without a result (exit code {proc.exitcode})"}
+
+
+def _apply(entry: dict, row: dict, measured: dict) -> dict:
+    if "error" in measured:
+        entry["status"] = measured["error"]
+        return entry
+    entry.update({k: v for k, v in measured.items() if k not in ("violations", "ok")})
+    cr = measured["ratio"]
+    if measured.get("violations", 0) > 0:
+        entry["status"] = f"requirement violated ({100 * measured['violations']:.3g} % of the values)"
+    elif not measured.get("ok", True):
+        entry["status"] = "safety requirements violated"
+    elif abs(cr / float(row["Compression"]) - 1) > TOLERANCE:
+        entry["status"] = f"ratio differs (reported {float(row['Compression']):.2f}, measured {cr:.2f})"
+        entry["valid"] = True
+    else:
+        entry["status"] = "validated"
+        entry["valid"] = True
+    return entry
+
+
+def validate_small(challenge: str, rows: list[dict], limit=None, timeout=300.0) -> list[dict]:
     results = []
     for row in rows[:limit]:
         config = parse_config(row.get("Configuration"))
         entry = dict(row, status="not reproducible (no machine-readable configuration)", valid=False)
         if config is not None:
-            try:
-                codec = get_codec(config)
-                decoded, cr, t_enc, t_dec = roundtrip(codec, da.values)
-                da_dec = da.copy(data=decoded.astype(da.dtype) if decoded.dtype != da.dtype else decoded)
-                violations = check(da, da_dec)
-                entry.update(ratio=cr, violations=violations, enc_gbps=da.nbytes / t_enc / 1e9, dec_gbps=da.nbytes / t_dec / 1e9)
-                if violations > 0:
-                    entry["status"] = f"requirement violated ({100 * violations:.3g} % of the values)"
-                elif abs(cr / float(row["Compression"]) - 1) > TOLERANCE:
-                    entry["status"] = f"ratio differs (reported {float(row['Compression']):.2f}, measured {cr:.2f})"
-                    entry["valid"] = True
-                else:
-                    entry["status"] = "validated"
-                    entry["valid"] = True
-            except Exception as ex:
-                entry["status"] = f"failed: {type(ex).__name__}: {str(ex)[:80]}"
+            entry = _apply(entry, row, run_entry("small", challenge, "", config, timeout))
         results.append(entry)
         print(challenge, row.get("Author"), entry["status"], flush=True)
     return results
 
 
-def validate_era5(leveltype: str, rows: list[dict], limit=None) -> list[dict]:
-    from compression_requirement_checks import check_safety_requirements
-
+def validate_era5(leveltype: str, rows: list[dict], limit=None, timeout=300.0) -> list[dict]:
     results = []
-    cache: dict = {}
     for row in rows[:limit]:
         variable = str(row.get("Variable", "")).strip()
         timesteps = str(row.get("Default/all timestep(s)", "default")).strip()
@@ -180,26 +231,7 @@ def validate_era5(leveltype: str, rows: list[dict], limit=None) -> list[dict]:
             entry["status"] = "not validated (only the default timestep is validated here)"
             results.append(entry)
             continue
-        try:
-            if variable not in cache:
-                cache[variable] = (load_era5(leveltype, variable), era5_requirements(leveltype, variable))
-            values, requirements = cache[variable]
-            codec = get_codec(config)
-            decoded, cr, t_enc, t_dec = roundtrip(codec, values)
-            ok = bool(check_safety_requirements(original=values, reconstructed=decoded, requirements=requirements))
-            entry.update(ratio=cr, enc_gbps=values.nbytes / t_enc / 1e9, dec_gbps=values.nbytes / t_dec / 1e9)
-            if not ok:
-                entry["status"] = "safety requirements violated"
-            elif abs(cr / float(row["Compression"]) - 1) > TOLERANCE:
-                entry["status"] = f"ratio differs (reported {float(row['Compression']):.2f}, measured {cr:.2f})"
-                entry["valid"] = True
-            else:
-                entry["status"] = "validated"
-                entry["valid"] = True
-        except KeyError:
-            entry["status"] = "no safety requirements available for this variable"
-        except Exception as ex:
-            entry["status"] = f"failed: {type(ex).__name__}: {str(ex)[:80]}"
+        entry = _apply(entry, row, run_entry("era5", leveltype, variable, config, timeout))
         results.append(entry)
         print(leveltype, variable, row.get("Author"), entry["status"], flush=True)
     return results
@@ -264,6 +296,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sheets", default="NaN,PwRel,Gradient,ERA5-Pressure,ERA5-Single")
     parser.add_argument("--limit", type=int, default=None, help="validate at most N entries per sheet")
+    parser.add_argument("--timeout", type=float, default=300.0, help="per-entry timeout in seconds")
     parser.add_argument("--out", default="leaderboards.md")
     parser.add_argument("--json", default="validated.json")
     parser.add_argument("--xlsx", default=None, help="use a local copy of the sheet instead of downloading it")
@@ -278,11 +311,11 @@ def main():
         rows = read_sheet(xlsx, sheet)
         try:
             if sheet in ("NaN", "PwRel", "Gradient"):
-                results = validate_small(sheet, rows, args.limit)
+                results = validate_small(sheet, rows, args.limit, args.timeout)
                 sections.append(render_table(f"Challenge: {sheet}", results))
             else:
                 leveltype = "pressure" if sheet == "ERA5-Pressure" else "single"
-                results = validate_era5(leveltype, rows, args.limit)
+                results = validate_era5(leveltype, rows, args.limit, args.timeout)
                 sections.append(render_table(f"Challenge: {sheet} (best validated entry per variable)", results, group_key="Variable"))
         except Exception:
             traceback.print_exc()
