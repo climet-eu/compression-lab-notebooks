@@ -16,3 +16,6 @@ scoreboard.xlsx
 era5_stats.json
 era5_requirements.txt
 results_verified/
+# validate_submissions.py outputs
+leaderboards*.md
+validated*.json
